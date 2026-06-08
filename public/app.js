@@ -111,19 +111,7 @@
       });
       container.appendChild(btn);
     });
-    // + ADD button
-    const add = document.createElement('button');
-    add.textContent = '+ ADD';
-    add.style.cssText = 'border-style:dashed;opacity:0.7';
-    add.title = 'Add a new user';
-    add.addEventListener('click', () => {
-      const name = prompt('New user name:');
-      if (!name) return;
-      if (!addCustomUser(name)) { alert('User already exists or invalid name.'); return; }
-      // Re-render all selectors so the new chip appears everywhere.
-      SELECTORS.forEach(renderUserSelector);
-    });
-    container.appendChild(add);
+    // No + ADD button — new users can be added via the New Pick form.
   }
 
   function renderAllSelectors() { SELECTORS.forEach(renderUserSelector); }
@@ -240,7 +228,14 @@
     const btn = document.getElementById('roast-btn');
     btn.disabled = true;
     btn.textContent = 'ROASTING...';
-    content.innerHTML = '<div class="loading">GENERATING ROAST...</div>';
+    // Loading at the TOP of the content area — prominent, not a lost puppy.
+    content.innerHTML = '<div style="padding:16px 0"><div id="roast-loading" style="font-size:14px;font-weight:700;color:var(--accent);letter-spacing:0.1em;line-height:1.3">GENERATING ROAST...</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px">Recalling picks from Walrus + AI roast — ~30-60s</div></div>';
+    let dots = 0;
+    const loadTimer = setInterval(() => {
+      dots = (dots + 1) % 4;
+      const el = document.getElementById('roast-loading');
+      if (el) el.textContent = 'GENERATING ROAST' + '.'.repeat(dots);
+    }, 500);
     try {
       const res = await fetch(API + '/api/roast', {
         method: 'POST',
@@ -249,9 +244,11 @@
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
+      clearInterval(loadTimer);
       content.innerHTML = '<div class="roast-text">' + escHtml(data.roast) + '</div>' +
         (data.blob_id ? '<div class="roast-blob">WALRUS BLOB: ' + data.blob_id + '</div>' : '');
     } catch (e) {
+      clearInterval(loadTimer);
       content.innerHTML = '<div class="empty"><span>ROAST FAILED: ' + escHtml(e.message) + '</span></div>';
     }
     btn.disabled = false;
