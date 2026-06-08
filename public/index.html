@@ -66,6 +66,10 @@ footer .right{color:var(--accent)}
 .filter-bar button:hover{color:var(--panel-light)}
 .filter-bar button.active{color:var(--accent-soft);border-color:var(--accent);background:rgba(212,160,23,0.1)}
 .filter-bar .count{margin-left:auto;font-size:9px;font-weight:700;color:var(--text-muted)}
+.find-bar{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--panel-mid);flex-shrink:0}
+.find-label{font-size:9px;font-weight:700;letter-spacing:0.1em;color:var(--text-muted)}
+.find-bar select{flex:1;max-width:240px;padding:5px 10px;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:0.08em;background:var(--panel-dark);color:var(--accent-soft);border:1px solid var(--panel-mid);cursor:pointer;text-transform:uppercase}
+.find-bar select:focus{outline:none;border-color:var(--accent)}
 /* SCROLLABLE */
 .scroll-y{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
 .scroll-y::-webkit-scrollbar{width:4px}
@@ -166,7 +170,10 @@ footer .right{color:var(--accent)}
         <button data-filter="recent">RECENT</button>
         <span class="count" id="feed-count">0 PICKS</span>
       </div>
-      <div class="user-select" id="feed-users"></div>
+      <div class="find-bar" id="feed-find">
+        <span class="find-label">FIND USER</span>
+        <select id="feed-find-user"><option value="">EVERYONE</option></select>
+      </div>
       <div class="scroll-y" id="feed-list">
         <div class="loading">LOADING PREDICTIONS...</div>
       </div>

@@ -81,6 +81,24 @@ export class PitchMind {
     return { scored, record };
   }
 
+  /**
+   * Global feed: recall ALL predictions (every user) + results, score, and
+   * return one merged stream sorted newest-first, plus the distinct user list.
+   */
+  async feed() {
+    const predHits = await this.mem.recall(`predictions and hot takes`, RECALL_LIMIT);
+    const resHits = await this.mem.recall(`final match results and scores`, RECALL_LIMIT);
+    const preds = dedupePreds(
+      predHits.map((h) => parsePrediction(h.text)).filter((x): x is Prediction => !!x),
+    );
+    const results = dedupeResults(
+      resHits.map((h) => parseResult(h.text)).filter((x): x is MatchResult => !!x),
+    );
+    const scored = scorePicks(preds, results).sort((a, b) => (a.ts > b.ts ? -1 : 1));
+    const users = Array.from(new Set(scored.map((p) => p.user))).sort();
+    return { scored, users };
+  }
+
   async restore() {
     return this.mem.restore();
   }

@@ -56,6 +56,9 @@ const server = createServer(async (req, res) => {
       if (!user) return send(res, 400, { error: "user required" });
       return send(res, 200, await agent.recap(user));
     }
+    if (req.method === "GET" && url.pathname === "/api/feed") {
+      return send(res, 200, await agent.feed());
+    }
     if (req.method === "POST" && url.pathname === "/api/predict") {
       const b = await readJson(req);
       const out = await agent.predict({

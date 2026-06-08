@@ -90,7 +90,6 @@
   /* ==================== USER SELECTORS (dynamic) ==================== */
   // Each selector tracks its own active user + reload callback.
   const SELECTORS = [
-    { id: 'feed-users', getActive: () => feedUser, onPick: u => { feedUser = u; loadFeed(); } },
     { id: 'roast-users', getActive: () => roastUser, onPick: u => { roastUser = u; } },
     { id: 'status-users', getActive: () => statusUser, onPick: u => { statusUser = u; loadStatus(); } },
   ];
@@ -142,6 +141,56 @@
     });
   });
 
+  // FIND USER dropdown — filters the global feed to one user (or EVERYONE)
+  let feedFilterUser = '';
+  const findSel = document.getElementById('feed-find-user');
+  if (findSel) {
+    findSel.addEventListener('change', () => {
+      feedFilterUser = findSel.value;
+      renderFeed();
+    });
+  }
+
+  let feedCache = []; // last global feed payload (all users), scored
+
+  function renderFeed() {
+    const list = document.getElementById('feed-list');
+    const count = document.getElementById('feed-count');
+    let picks = feedCache.slice();
+    if (feedFilterUser) picks = picks.filter(p => p.user === feedFilterUser);
+    if (feedFilter === 'recent') {
+      picks = picks.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+    }
+    count.textContent = picks.length + ' PICKS';
+    if (picks.length === 0) {
+      list.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg><span>NO PREDICTIONS YET</span></div>';
+      return;
+    }
+    list.innerHTML = picks.map(p => {
+      const correctCls = p.correct === true ? 'correct' : p.correct === false ? 'wrong' : '';
+      const correctLabel = p.correct === true ? '✓' : p.correct === false ? '✗' : '';
+      const ts = p.ts ? new Date(p.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      const take = p.take ? '<div class="card-take">"' + escHtml(p.take) + '"</div>' : '';
+      return '<div class="card">' +
+        '<div class="card-header"><span class="teams">' + escHtml(p.home) + ' vs ' + escHtml(p.away) + '</span>' +
+        '<span class="pick ' + p.pick + '">' + p.pick + '</span></div>' +
+        '<div class="card-meta"><span class="feed-user">' + escHtml((p.user || '').toUpperCase()) + '</span>' +
+        '<span class="conf">' + p.confidence + '% CONF</span>' +
+        '<span>' + ts + '</span>' +
+        (correctLabel ? '<span class="' + correctCls + '">' + correctLabel + '</span>' : '') +
+        '</div>' + take + '</div>';
+    }).join('');
+  }
+
+  function populateFindUsers(users) {
+    if (!findSel) return;
+    const prev = findSel.value;
+    const opts = ['<option value="">EVERYONE</option>']
+      .concat(users.map(u => '<option value="' + escHtml(u) + '">' + escHtml(u.toUpperCase()) + '</option>'));
+    findSel.innerHTML = opts.join('');
+    if (users.includes(prev)) findSel.value = prev;
+  }
+
   async function loadFeed() {
     const thisLoad = ++feedLoadId; // capture current load id
     const list = document.getElementById('feed-list');
@@ -160,36 +209,17 @@
     }, 600);
 
     try {
-      const res = await fetch(API + '/api/recap?user=' + encodeURIComponent(feedUser));
+      const res = await fetch(API + '/api/feed');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
-      // Stale check — user switched while we were loading
+      // Stale check — reloaded while we were loading
       if (thisLoad !== feedLoadId) return;
 
       clearInterval(loadTimer);
-      let picks = data.scored || [];
-      if (feedFilter === 'recent') {
-        picks = [...picks].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
-      }
-      count.textContent = picks.length + ' PICKS';
-      if (picks.length === 0) {
-        list.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg><span>NO PREDICTIONS YET</span></div>';
-        return;
-      }
-      list.innerHTML = picks.map(p => {
-        const correctCls = p.correct === true ? 'correct' : p.correct === false ? 'wrong' : '';
-        const correctLabel = p.correct === true ? '✓' : p.correct === false ? '✗' : '';
-        const ts = p.ts ? new Date(p.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-        const take = p.take ? '<div class="card-take">"' + escHtml(p.take) + '"</div>' : '';
-        return '<div class="card">' +
-          '<div class="card-header"><span class="teams">' + escHtml(p.home) + ' vs ' + escHtml(p.away) + '</span>' +
-          '<span class="pick ' + p.pick + '">' + p.pick + '</span></div>' +
-          '<div class="card-meta"><span class="conf">' + p.confidence + '% CONF</span>' +
-          '<span>' + ts + '</span>' +
-          (correctLabel ? '<span class="' + correctCls + '">' + correctLabel + '</span>' : '') +
-          '</div>' + take + '</div>';
-      }).join('');
+      feedCache = data.scored || [];
+      populateFindUsers(data.users || []);
+      renderFeed();
     } catch (e) {
       if (thisLoad !== feedLoadId) return; // stale
       clearInterval(loadTimer);
