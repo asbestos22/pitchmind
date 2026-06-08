@@ -16,7 +16,7 @@ import {
 import { scorePicks, summarize } from "./score.js";
 import { llmRoast } from "./roast.js";
 
-const RECALL_LIMIT = 200;
+const RECALL_LIMIT = 100;
 
 export class PitchMind {
   constructor(private mem: WalrusMemory) {}
@@ -45,10 +45,9 @@ export class PitchMind {
 
   /** Pull this user's predictions + all results back from Walrus. */
   private async load(user: string): Promise<{ preds: Prediction[]; results: MatchResult[] }> {
-    const [predHits, resHits] = await Promise.all([
-      this.mem.recall(`predictions and hot takes by ${user}`, RECALL_LIMIT),
-      this.mem.recall(`final match results and scores`, RECALL_LIMIT),
-    ]);
+    // Sequential recalls to avoid overloading the relayer
+    const predHits = await this.mem.recall(`predictions and hot takes by ${user}`, RECALL_LIMIT);
+    const resHits = await this.mem.recall(`final match results and scores`, RECALL_LIMIT);
     const preds = dedupePreds(
       predHits
         .map((h) => parsePrediction(h.text))

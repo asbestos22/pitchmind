@@ -68,10 +68,25 @@ export class WalrusMemory {
     return { job_id: res.job_id };
   }
 
-  /** Semantic recall from Walrus. Lower distance = closer match. */
+  /** Semantic recall from Walrus. Lower distance = closer match. Retries on transient aborts. */
   async recall(query: string, limit = 20): Promise<RecallHit[]> {
-    const res = await this.client.recall({ query, limit, namespace: this.namespace });
-    return res.results ?? [];
+    let lastErr: unknown;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        const res = await this.client.recall({ query, limit, namespace: this.namespace });
+        return res.results ?? [];
+      } catch (e) {
+        lastErr = e;
+        const msg = e instanceof Error ? e.message : String(e);
+        // Relayer occasionally aborts heavy recalls — back off and retry.
+        if (msg.includes("aborted") || msg.includes("timed out") || msg.includes("429")) {
+          await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
+          continue;
+        }
+        throw e;
+      }
+    }
+    throw lastErr;
   }
 
   /**
