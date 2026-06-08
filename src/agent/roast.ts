@@ -15,11 +15,43 @@ export interface RoastInput {
 }
 
 export function templateRoast({ summary, scored, day }: RoastInput): string {
-  if (summary.decided === 0) {
+  if (scored.length === 0) {
     return `Day ${day}: I don't know you yet. Make some picks, let a few matches finish, and come back — I remember everything, and I will use it against you.`;
   }
-  const pct = Math.round(summary.accuracy * 100);
+
   const lines: string[] = [];
+
+  if (summary.decided === 0) {
+    // No results yet — roast the picks themselves
+    lines.push(`Day ${day}, ${summary.user}: no matches finished yet, but I can already see trouble.`);
+
+    const picks = scored.map(s => s.pick);
+    const homeCount = picks.filter(p => p === 'HOME').length;
+    const drawCount = picks.filter(p => p === 'DRAW').length;
+    const awayCount = picks.filter(p => p === 'AWAY').length;
+    const total = picks.length;
+
+    if (homeCount > total * 0.6) lines.push(`Out of ${total} picks, ${homeCount} are home wins. That's not analysis, that's home-court bias.`);
+    else if (drawCount > total * 0.4) lines.push(`${drawCount} draws out of ${total}? You're playing it safe and that's exactly why you'll lose.`);
+    else if (awayCount > total * 0.6) lines.push(`${awayCount} away wins out of ${total}. Bold. Probably wrong, but bold.`);
+
+    const avgConf = Math.round(scored.reduce((a, s) => a + s.confidence, 0) / total);
+    if (avgConf >= 80) lines.push(`Average confidence ${avgConf}%. You trust yourself more than you should. I'll be here when reality hits.`);
+    else if (avgConf <= 40) lines.push(`Average confidence ${avgConf}% — at least you know you don't know. That's the first step.`);
+
+    // Quote a hot take
+    const withTake = scored.filter(s => s.take);
+    if (withTake.length) {
+      const pick = withTake[Math.floor(Math.random() * withTake.length)];
+      lines.push(`Receipt: "${pick.take}" — you said that about ${pick.home} vs ${pick.away}. I saved it. I always do.`);
+    }
+
+    lines.push(`Come back after a few matches finish. I'll have real ammo then.`);
+    return lines.join('\n');
+  }
+
+  // Has results — full roast
+  const pct = Math.round(summary.accuracy * 100);
   lines.push(
     `Day ${day} verdict, ${summary.user}: ${summary.correct}/${summary.decided} correct (${pct}%).`,
   );
