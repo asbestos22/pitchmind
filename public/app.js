@@ -4,6 +4,9 @@
 
   const API = '';
   const DEFAULT_USERS = ['F5', 'Aleko', 'Tita', 'Rex', 'Nina'];
+  // Users discovered from the Walrus feed — updated after every loadFeed() call
+  // so Roast/Status chips auto-include any user who has predictions on-chain.
+  let feedWalrusUsers = [];
   // Custom users added via UI or by submitting a prediction, persisted locally.
   function getCustomUsers() {
     try { return JSON.parse(localStorage.getItem('pm_custom_users') || '[]'); }
@@ -12,14 +15,22 @@
   function addCustomUser(name) {
     name = (name || '').trim();
     if (!name) return false;
-    const all = [...DEFAULT_USERS, ...getCustomUsers()];
+    const all = [...DEFAULT_USERS, ...feedWalrusUsers, ...getCustomUsers()];
     if (all.some(u => u.toLowerCase() === name.toLowerCase())) return false; // dup
     const custom = getCustomUsers();
     custom.push(name);
     localStorage.setItem('pm_custom_users', JSON.stringify(custom));
     return true;
   }
-  function allUsers() { return [...DEFAULT_USERS, ...getCustomUsers()]; }
+  function allUsers() {
+    // Merge: defaults, feed-discovered, localStorage customs — deduped by case
+    const seen = new Map();
+    [...DEFAULT_USERS, ...feedWalrusUsers, ...getCustomUsers()].forEach(u => {
+      const key = u.toLowerCase();
+      if (!seen.has(key)) seen.set(key, u); // keep first casing
+    });
+    return [...seen.values()];
+  }
 
   /* ==================== THREE.JS GOLD ICOSAHEDRON ==================== */
   function initLogo() {
@@ -213,8 +224,10 @@
 
       stopLoading();
       feedCache = data.scored || [];
-      populateFindUsers(data.users || []);
+      feedWalrusUsers = data.users || [];
+      populateFindUsers(feedWalrusUsers);
       renderFeed();
+      renderAllSelectors(); // sync Roast/Status chips with feed users
     } catch (e) {
       if (thisLoad !== feedLoadId) { stopLoading(); return; } // stale
       stopLoading();
