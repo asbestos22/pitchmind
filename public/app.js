@@ -1,499 +1,374 @@
-// PitchMind — app.js v4
-// Schedule-driven prediction picker, yellow dominant
+/* PitchMind v6 — Kimi-inspired UI with Three.js gold icosahedron */
+(function () {
+  'use strict';
 
-const API = '';
-const $ = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
+  const API = '';
+  const USERS = ['F5', 'Aleko', 'Tita', 'Rex', 'Nina'];
 
-// ── WC2026 Schedule (real group stage from ESPN) ──
-const SCHEDULE = [
-  {date:'2026-06-11',time:'19:00',home:'Mexico',away:'South Africa',group:'',venue:'Estadio Banorte'},
-  {date:'2026-06-12',time:'02:00',home:'South Korea',away:'Czechia',group:'',venue:'Estadio Akron'},
-  {date:'2026-06-12',time:'19:00',home:'Canada',away:'Bosnia-Herzegovina',group:'',venue:'BMO Field'},
-  {date:'2026-06-13',time:'01:00',home:'United States',away:'Paraguay',group:'',venue:'SoFi Stadium'},
-  {date:'2026-06-13',time:'19:00',home:'Qatar',away:'Switzerland',group:'',venue:"Levi's Stadium"},
-  {date:'2026-06-13',time:'22:00',home:'Brazil',away:'Morocco',group:'',venue:'MetLife Stadium'},
-  {date:'2026-06-14',time:'01:00',home:'Haiti',away:'Scotland',group:'',venue:'Gillette Stadium'},
-  {date:'2026-06-14',time:'04:00',home:'Australia',away:'Türkiye',group:'',venue:'BC Place'},
-  {date:'2026-06-14',time:'17:00',home:'Germany',away:'Curaçao',group:'',venue:'NRG Stadium'},
-  {date:'2026-06-14',time:'20:00',home:'Netherlands',away:'Japan',group:'',venue:'AT&T Stadium'},
-  {date:'2026-06-14',time:'23:00',home:'Ivory Coast',away:'Ecuador',group:'',venue:'Lincoln Financial Field'},
-  {date:'2026-06-15',time:'02:00',home:'Sweden',away:'Tunisia',group:'',venue:'Estadio BBVA'},
-  {date:'2026-06-15',time:'16:00',home:'Spain',away:'Cape Verde',group:'',venue:'Mercedes-Benz Stadium'},
-  {date:'2026-06-15',time:'19:00',home:'Belgium',away:'Egypt',group:'',venue:'Lumen Field'},
-  {date:'2026-06-15',time:'22:00',home:'Saudi Arabia',away:'Uruguay',group:'',venue:'Hard Rock Stadium'},
-  {date:'2026-06-16',time:'01:00',home:'Iran',away:'New Zealand',group:'',venue:'SoFi Stadium'},
-  {date:'2026-06-16',time:'19:00',home:'France',away:'Senegal',group:'',venue:'MetLife Stadium'},
-  {date:'2026-06-16',time:'22:00',home:'Iraq',away:'Norway',group:'',venue:'Gillette Stadium'},
-  {date:'2026-06-17',time:'01:00',home:'Argentina',away:'Algeria',group:'',venue:'GEHA Field at Arrowhead Stadium'},
-  {date:'2026-06-17',time:'04:00',home:'Austria',away:'Jordan',group:'',venue:"Levi's Stadium"},
-  {date:'2026-06-17',time:'17:00',home:'Portugal',away:'Congo DR',group:'',venue:'NRG Stadium'},
-  {date:'2026-06-17',time:'20:00',home:'England',away:'Croatia',group:'',venue:'AT&T Stadium'},
-  {date:'2026-06-17',time:'23:00',home:'Ghana',away:'Panama',group:'',venue:'BMO Field'},
-  {date:'2026-06-18',time:'02:00',home:'Uzbekistan',away:'Colombia',group:'',venue:'Estadio Banorte'},
-  {date:'2026-06-18',time:'16:00',home:'Czechia',away:'South Africa',group:'',venue:'Mercedes-Benz Stadium'},
-  {date:'2026-06-18',time:'19:00',home:'Switzerland',away:'Bosnia-Herzegovina',group:'',venue:'SoFi Stadium'},
-  {date:'2026-06-18',time:'22:00',home:'Canada',away:'Qatar',group:'',venue:'BC Place'},
-  {date:'2026-06-19',time:'01:00',home:'Mexico',away:'South Korea',group:'',venue:'Estadio Akron'},
-  {date:'2026-06-19',time:'19:00',home:'United States',away:'Australia',group:'',venue:'Lumen Field'},
-  {date:'2026-06-19',time:'22:00',home:'Scotland',away:'Morocco',group:'',venue:'Gillette Stadium'},
-  {date:'2026-06-20',time:'00:30',home:'Brazil',away:'Haiti',group:'',venue:'Lincoln Financial Field'},
-  {date:'2026-06-20',time:'03:00',home:'Türkiye',away:'Paraguay',group:'',venue:"Levi's Stadium"},
-  {date:'2026-06-20',time:'17:00',home:'Netherlands',away:'Sweden',group:'',venue:'NRG Stadium'},
-  {date:'2026-06-20',time:'20:00',home:'Germany',away:'Ivory Coast',group:'',venue:'BMO Field'},
-  {date:'2026-06-21',time:'00:00',home:'Ecuador',away:'Curaçao',group:'',venue:'GEHA Field at Arrowhead Stadium'},
-  {date:'2026-06-21',time:'04:00',home:'Tunisia',away:'Japan',group:'',venue:'Estadio BBVA'},
-  {date:'2026-06-21',time:'16:00',home:'Spain',away:'Saudi Arabia',group:'',venue:'Mercedes-Benz Stadium'},
-  {date:'2026-06-21',time:'19:00',home:'Belgium',away:'Iran',group:'',venue:'SoFi Stadium'},
-  {date:'2026-06-21',time:'22:00',home:'Uruguay',away:'Cape Verde',group:'',venue:'Hard Rock Stadium'},
-  {date:'2026-06-22',time:'01:00',home:'New Zealand',away:'Egypt',group:'',venue:'BC Place'},
-  {date:'2026-06-22',time:'17:00',home:'Argentina',away:'Austria',group:'',venue:'AT&T Stadium'},
-  {date:'2026-06-22',time:'21:00',home:'France',away:'Iraq',group:'',venue:'Lincoln Financial Field'},
-  {date:'2026-06-23',time:'00:00',home:'Norway',away:'Senegal',group:'',venue:'MetLife Stadium'},
-  {date:'2026-06-23',time:'03:00',home:'Jordan',away:'Algeria',group:'',venue:"Levi's Stadium"},
-  {date:'2026-06-23',time:'17:00',home:'Portugal',away:'Uzbekistan',group:'',venue:'NRG Stadium'},
-  {date:'2026-06-23',time:'20:00',home:'England',away:'Ghana',group:'',venue:'Gillette Stadium'},
-  {date:'2026-06-23',time:'23:00',home:'Panama',away:'Croatia',group:'',venue:'BMO Field'},
-  {date:'2026-06-24',time:'02:00',home:'Colombia',away:'Congo DR',group:'',venue:'Estadio Akron'},
-  {date:'2026-06-24',time:'19:00',home:'Bosnia-Herzegovina',away:'Qatar',group:'',venue:'Lumen Field'},
-  {date:'2026-06-24',time:'19:00',home:'Switzerland',away:'Canada',group:'',venue:'BC Place'},
-  {date:'2026-06-24',time:'22:00',home:'Morocco',away:'Haiti',group:'',venue:'Mercedes-Benz Stadium'},
-  {date:'2026-06-24',time:'22:00',home:'Scotland',away:'Brazil',group:'',venue:'Hard Rock Stadium'},
-  {date:'2026-06-25',time:'01:00',home:'Czechia',away:'Mexico',group:'',venue:'Estadio Banorte'},
-  {date:'2026-06-25',time:'01:00',home:'South Africa',away:'South Korea',group:'',venue:'Estadio BBVA'},
-  {date:'2026-06-25',time:'20:00',home:'Curaçao',away:'Ivory Coast',group:'',venue:'Lincoln Financial Field'},
-  {date:'2026-06-25',time:'20:00',home:'Ecuador',away:'Germany',group:'',venue:'MetLife Stadium'},
-  {date:'2026-06-25',time:'23:00',home:'Japan',away:'Sweden',group:'',venue:'AT&T Stadium'},
-  {date:'2026-06-25',time:'23:00',home:'Tunisia',away:'Netherlands',group:'',venue:'GEHA Field at Arrowhead Stadium'},
-  {date:'2026-06-26',time:'02:00',home:'Paraguay',away:'Australia',group:'',venue:"Levi's Stadium"},
-  {date:'2026-06-26',time:'02:00',home:'Türkiye',away:'United States',group:'',venue:'SoFi Stadium'},
-  {date:'2026-06-26',time:'19:00',home:'Norway',away:'France',group:'',venue:'Gillette Stadium'},
-  {date:'2026-06-26',time:'19:00',home:'Senegal',away:'Iraq',group:'',venue:'BMO Field'},
-  {date:'2026-06-27',time:'00:00',home:'Cape Verde',away:'Saudi Arabia',group:'',venue:'NRG Stadium'},
-  {date:'2026-06-27',time:'00:00',home:'Uruguay',away:'Spain',group:'',venue:'Estadio Akron'},
-  {date:'2026-06-27',time:'03:00',home:'Egypt',away:'Iran',group:'',venue:'Lumen Field'},
-  {date:'2026-06-27',time:'03:00',home:'New Zealand',away:'Belgium',group:'',venue:'BC Place'},
-  {date:'2026-06-27',time:'21:00',home:'Croatia',away:'Ghana',group:'',venue:'Lincoln Financial Field'},
-  {date:'2026-06-27',time:'21:00',home:'Panama',away:'England',group:'',venue:'MetLife Stadium'},
-  {date:'2026-06-27',time:'23:30',home:'Colombia',away:'Portugal',group:'',venue:'Hard Rock Stadium'},
-  {date:'2026-06-27',time:'23:30',home:'Congo DR',away:'Uzbekistan',group:'',venue:'Mercedes-Benz Stadium'},
-  {date:'2026-06-28',time:'02:00',home:'Algeria',away:'Austria',group:'',venue:'GEHA Field at Arrowhead Stadium'},
-  {date:'2026-06-28',time:'02:00',home:'Jordan',away:'Argentina',group:'',venue:'AT&T Stadium'},
-];
+  /* ==================== THREE.JS GOLD ICOSAHEDRON ==================== */
+  function initLogo() {
+    const canvas = document.getElementById('logo3d');
+    if (!canvas || typeof THREE === 'undefined') return;
 
-// Add matchId + flag
-SCHEDULE.forEach((m, i) => {
-  m.matchId = m.home.slice(0,3).toUpperCase() + '-' + m.away.slice(0,3).toUpperCase();
-  m.idx = i;
-});
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.z = 3;
 
-// ── State ──
-let selectedMatch = null;
-let selectedPick = null;
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(36, 36);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x000000, 0);
 
-// ── Toast ──
-function toast(msg, type = 'info') {
-  const c = $('#toasts');
-  if (!c) return;
-  const el = document.createElement('div');
-  el.className = 'toast ' + type;
-  el.textContent = msg;
-  c.appendChild(el);
-  setTimeout(() => {
-    el.style.transition = 'opacity .2s';
-    el.style.opacity = '0';
-    setTimeout(() => el.remove(), 200);
-  }, 3000);
-}
-
-// ── Tabs ──
-function switchTo(name) {
-  $$('.nav-tab').forEach(t => t.classList.remove('active'));
-  $$('.panel').forEach(p => p.classList.remove('active'));
-  const tab = document.querySelector('.nav-tab[data-panel="' + name + '"]');
-  const panel = document.getElementById(name);
-  if (tab) tab.classList.add('active');
-  if (panel) panel.classList.add('active');
-  if (name === 'predictions') loadPredictions();
-  if (name === 'health') loadHealth();
-  if (name === 'submit') renderSchedule();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.nav-tab').forEach(tab => {
-    tab.addEventListener('click', (e) => {
-      e.preventDefault();
-      const panel = tab.getAttribute('data-panel');
-      if (panel) switchTo(panel);
+    const geo = new THREE.IcosahedronGeometry(1.1, 1);
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xD4A017,
+      metalness: 0.8,
+      roughness: 0.2,
+      emissive: 0x8B6914,
+      emissiveIntensity: 0.3,
+      wireframe: true,
     });
-  });
-});
+    const mesh = new THREE.Mesh(geo, mat);
+    scene.add(mesh);
 
-// ── Schedule Renderer ──
-let activeDate = null;
+    const amb = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(amb);
+    const dir = new THREE.DirectionalLight(0xE6AF2E, 1.2);
+    dir.position.set(2, 3, 4);
+    scene.add(dir);
 
-function renderSchedule() {
-  const grid = $('#sched-grid');
-  const dateTabs = $('#date-tabs');
-  const countEl = $('#sched-count');
-  if (!grid || !dateTabs) return;
+    function animate() {
+      requestAnimationFrame(animate);
+      mesh.rotation.y += 0.008;
+      mesh.rotation.x += 0.003;
+      renderer.render(scene, camera);
+    }
+    animate();
+  }
 
-  // Load user from localStorage
-  const savedUser = localStorage.getItem('pitchmind_user') || '';
-  const userInput = $('#pred-user');
-  if (userInput && savedUser) userInput.value = savedUser;
+  /* ==================== STATE ==================== */
+  let activeTab = 'feed';
+  let feedUser = 'F5';
+  let feedFilter = 'all';
+  let roastUser = 'F5';
+  let statusUser = 'F5';
+  let selectedMatch = null;
+  let selectedPick = null;
+  let confidence = 70;
+  let schedule = [];
 
-  // Get unique dates
-  const dates = [...new Set(SCHEDULE.map(m => m.date))];
-  if (!activeDate) activeDate = dates[0];
-
-  if (countEl) countEl.textContent = '// ' + SCHEDULE.length + ' matches';
-
-  // Date tabs
-  dateTabs.innerHTML = dates.map(d => {
-    const label = new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const count = SCHEDULE.filter(m => m.date === d).length;
-    const active = d === activeDate ? ' active' : '';
-    return '<div class="date-tab' + active + '" data-date="' + d + '">' + label + ' <span style="opacity:.5">(' + count + ')</span></div>';
-  }).join('');
-
-  dateTabs.querySelectorAll('.date-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      activeDate = tab.getAttribute('data-date');
-      renderSchedule();
+  /* ==================== NAV ==================== */
+  document.querySelectorAll('nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      activeTab = tab;
+      if (tab === 'feed') loadFeed();
+      if (tab === 'status') loadStatus();
     });
   });
 
-  // Matches for active date
-  const matches = SCHEDULE.filter(m => m.date === activeDate);
-  grid.innerHTML = matches.map(m => {
-    const picked = hasPick(m.matchId);
-    const pickedClass = picked ? ' picked' : '';
-    const time = m.time;
-    return '<div class="match-card' + pickedClass + '" data-idx="' + m.idx + '">' +
-      '<div class="time">' + time + '</div>' +
-      '<div class="home-team">' + m.home + '</div>' +
-      '<div class="vs">vs</div>' +
-      '<div class="away-team">' + m.away + '</div>' +
-      (picked ? '<div class="tag">picked</div>' : '<div class="venue">' + m.venue + '</div>') +
-      '</div>';
-  }).join('');
-
-  // Click handlers
-  grid.querySelectorAll('.match-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const idx = parseInt(card.getAttribute('data-idx'));
-      selectMatch(SCHEDULE[idx]);
-    });
-  });
-}
-
-function hasPick(matchId) {
-  const user = ($('#pred-user') || {}).value || localStorage.getItem('pitchmind_user') || '';
-  if (!user) return false;
-  const picks = JSON.parse(localStorage.getItem('pm_picks_' + user) || '{}');
-  return !!picks[matchId];
-}
-
-function selectMatch(m) {
-  selectedMatch = m;
-  selectedPick = null;
-
-  // Mark selected card
-  $$('.match-card').forEach(c => c.classList.remove('selected'));
-  const card = document.querySelector('.match-card[data-idx="' + m.idx + '"]');
-  if (card) card.classList.add('selected');
-
-  // Show pred bar
-  const bar = $('#pred-bar');
-  const barMatch = $('#pred-bar-match');
-  if (bar) bar.style.display = 'block';
-  if (barMatch) barMatch.textContent = m.home + ' vs ' + m.away + '  ·  ' + m.date + ' ' + m.time + '  ·  ' + m.venue;
-
-  // Build pick buttons with team names
-  const pg = $('#pick-group');
-  if (pg) {
-    pg.innerHTML =
-      '<button class="pick-btn" data-pick="HOME">' + m.home.toUpperCase() + '</button>' +
-      '<button class="pick-btn" data-pick="DRAW">DRAW</button>' +
-      '<button class="pick-btn" data-pick="AWAY">' + m.away.toUpperCase() + '</button>';
-    // Attach listeners to new buttons
-    pg.querySelectorAll('.pick-btn').forEach(btn => {
+  /* ==================== USER SELECTORS ==================== */
+  function wireUserButtons(containerId, callback) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', () => {
-        pg.querySelectorAll('.pick-btn').forEach(b => b.classList.remove('active'));
+        container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        selectedPick = btn.getAttribute('data-pick');
-        const submitBtn = $('#submitBtn');
-        if (submitBtn) submitBtn.disabled = false;
+        callback(btn.dataset.user);
       });
     });
   }
 
-  const submitBtn = $('#submitBtn');
-  if (submitBtn) submitBtn.disabled = true;
+  wireUserButtons('feed-users', u => { feedUser = u; loadFeed(); });
+  wireUserButtons('roast-users', u => { roastUser = u; });
+  wireUserButtons('status-users', u => { statusUser = u; loadStatus(); });
 
-  // Scroll to bar
-  bar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// ── Pick Buttons ──
-document.addEventListener('DOMContentLoaded', () => {
-  // Confidence slider
-  const slider = $('#confSlider');
-  const sliderVal = $('#confVal');
-  if (slider && sliderVal) {
-    slider.addEventListener('input', () => {
-      sliderVal.textContent = slider.value + '%';
+  /* ==================== FEED ==================== */
+  document.querySelectorAll('.filter-bar button[data-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-bar button[data-filter]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      feedFilter = btn.dataset.filter;
+      loadFeed();
     });
-  }
+  });
 
-  // Submit button
-  const submitBtn = $('#submitBtn');
-  if (submitBtn) {
-    submitBtn.addEventListener('click', doSubmit);
-  }
-});
-
-// ── Submit ──
-async function doSubmit() {
-  if (!selectedMatch || !selectedPick) return toast('select match + pick', 'error');
-  const userInput = $('#pred-user');
-  const user = userInput ? userInput.value.trim() : '';
-  if (!user) return toast('enter your name first', 'error');
-
-  // Save name
-  localStorage.setItem('pitchmind_user', user);
-
-  const btn = $('#submitBtn');
-  const confSlider = $('#confSlider');
-  const takeInput = $('#pred-take');
-
-  btn.disabled = true;
-  btn.textContent = 'SAVING...';
-
-  try {
-    const r = await fetch(API + '/api/predict', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user,
-        matchId: selectedMatch.matchId,
-        home: selectedMatch.home,
-        away: selectedMatch.away,
-        pick: selectedPick,
-        confidence: Number(confSlider ? confSlider.value : 70),
-        take: takeInput ? takeInput.value.trim() : '',
-      }),
-    });
-    const data = await r.json();
-    if (data.error) throw new Error(data.error);
-
-    // Save to localStorage
-    const picks = JSON.parse(localStorage.getItem('pm_picks_' + user) || '{}');
-    picks[selectedMatch.matchId] = selectedPick;
-    localStorage.setItem('pm_picks_' + user, JSON.stringify(picks));
-
-    toast(selectedMatch.home + ' vs ' + selectedMatch.away + ' — ' + selectedPick.toLowerCase(), 'success');
-
-    // Reset
-    selectedMatch = null;
-    selectedPick = null;
-    if (takeInput) takeInput.value = '';
-    if (confSlider) confSlider.value = 70;
-    const confVal = $('#confVal');
-    if (confVal) confVal.textContent = '70%';
-    $$('.pick-btn').forEach(b => b.classList.remove('active'));
-    const pg = $('#pick-group');
-    if (pg) pg.innerHTML = '';
-    $('#pred-bar').style.display = 'none';
-
-    // Re-render to show "picked" tag
-    renderSchedule();
-
-  } catch (e) {
-    toast(e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'SUBMIT';
-  }
-}
-
-// ── Predictions Feed ──
-async function loadPredictions() {
-  const el = $('#pred-list');
-  const statsEl = $('#pred-stats');
-  const countEl = $('#pred-count');
-  if (!el) return;
-
-  const user = new URLSearchParams(location.search).get('user') || localStorage.getItem('pitchmind_user') || 'F5';
-  el.innerHTML = '<div class="loading">loading predictions</div>';
-
-  try {
-    const r = await fetch(API + '/api/recap?user=' + encodeURIComponent(user));
-    const data = await r.json();
-    const scored = data.scored || [];
-    const rec = data.record || {};
-
-    if (countEl) countEl.textContent = scored.length > 0 ? '// ' + scored.length + ' picks' : '';
-
-    if (statsEl) {
-      if (rec.total > 0) {
-        const pct = rec.accuracy ? Math.round(rec.accuracy * 100) : 0;
-        statsEl.innerHTML =
-          '<div class="stats-row">' +
-          '<div class="stat-cell"><div class="label">Total</div><div class="value">' + rec.total + '</div></div>' +
-          '<div class="stat-cell"><div class="label">Accuracy</div><div class="value ' + (pct >= 50 ? 'green' : 'red') + '">' + pct + '%</div></div>' +
-          '<div class="stat-cell"><div class="label">Correct</div><div class="value">' + (rec.correct || 0) + '/' + (rec.decided || 0) + '</div></div>' +
-          '<div class="stat-cell"><div class="label">Avg Conf</div><div class="value yellow">' + (rec.avgConfidence || 0) + '%</div></div>' +
-          '</div>';
-      } else {
-        statsEl.innerHTML = '';
+  async function loadFeed() {
+    const list = document.getElementById('feed-list');
+    const count = document.getElementById('feed-count');
+    list.innerHTML = '<div class="loading">LOADING PREDICTIONS...</div>';
+    try {
+      const res = await fetch(API + '/api/recap?user=' + encodeURIComponent(feedUser));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      let picks = data.scored || [];
+      if (feedFilter === 'recent') {
+        picks = [...picks].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
       }
-    }
-
-    if (!scored.length) {
-      el.innerHTML = '<div class="empty-state">no predictions for <strong>' + user + '</strong> yet.<br>pick a match to get started.</div>';
-      return;
-    }
-
-    var html = '<div class="pred-feed">';
-    for (var i = 0; i < scored.length; i++) {
-      var p = scored[i];
-      var pick = p.pick || '?';
-      var pickLabel = pick === 'HOME' ? 'home' : pick === 'AWAY' ? 'away' : 'draw';
-      var status = p.correct === true ? '[W]' : p.correct === false ? '[L]' : '[\u2014]';
-      var conf = p.confidence || 0;
-      html += '<div class="pred-row" style="opacity:0;transform:translateY(8px)">' +
-        '<div><span class="match">' + (p.home || '?') + '</span> <span class="vs">v</span> <span class="match">' + (p.away || '?') + '</span></div>' +
-        '<div class="pick ' + pick + '">' + pickLabel + '</div>' +
-        '<div class="conf">' + conf + '%</div>' +
-        '<div class="status">' + status + '</div>' +
-        '</div>';
-    }
-    html += '</div>';
-
-    html += '<div class="raw-toggle" onclick="this.nextElementSibling.classList.toggle(\'open\')">[ toggle raw json ]</div>';
-    html += '<div class="raw-data">' + JSON.stringify(data, null, 2) + '</div>';
-
-    el.innerHTML = html;
-
-    var rows = el.querySelectorAll('.pred-row');
-    for (var j = 0; j < rows.length; j++) {
-      (function(row, idx) {
-        setTimeout(function() {
-          row.style.transition = 'opacity .3s ease, transform .3s ease';
-          row.style.opacity = '1';
-          row.style.transform = 'translateY(0)';
-        }, idx * 60 + 50);
-      })(rows[j], j);
-    }
-
-  } catch (e) {
-    el.innerHTML = '<div class="empty-state">failed: ' + e.message + '</div>';
-  }
-}
-
-// ── Roast ──
-async function doRoast() {
-  var userInput = $('#roast-user');
-  var user = userInput ? userInput.value.trim() : '';
-  if (!user) return toast('enter a username', 'error');
-
-  var btn = $('#roastBtn');
-  var out = $('#roast-output');
-  var rawWrap = $('#roast-raw');
-  var rawEl = $('#roast-raw-data');
-
-  btn.disabled = true;
-  btn.textContent = 'ROASTING...';
-
-  out.innerHTML =
-    '<div class="label">generating roast for ' + user + '...</div>' +
-    '<div class="loading" style="padding:20px 0;text-align:left">computing</div>';
-
-  try {
-    var r = await fetch(API + '/api/roast', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: user }),
-    });
-    var data = await r.json();
-    if (data.error) throw new Error(data.error);
-
-    var text = data.roast || 'no roast available \u2014 add predictions first';
-    var words = text.split(' ');
-
-    out.innerHTML =
-      '<div class="label">roast // ' + user + '</div>' +
-      '<div class="roast-text" id="roastText"></div>';
-
-    var revealEl = $('#roastText');
-    var cursor = document.createElement('span');
-    cursor.className = 'roast-cursor';
-    revealEl.parentNode.insertBefore(cursor, revealEl.nextSibling);
-    var idx = 0;
-    var interval = setInterval(function() {
-      if (idx >= words.length) {
-        clearInterval(interval);
-        cursor.remove();
+      count.textContent = picks.length + ' PICKS';
+      if (picks.length === 0) {
+        list.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg><span>NO PREDICTIONS YET</span></div>';
         return;
       }
-      var span = document.createElement('span');
-      span.className = 'word';
-      span.textContent = words[idx] + ' ';
-      revealEl.appendChild(span);
-      requestAnimationFrame(function() { span.classList.add('visible'); });
-      idx++;
-    }, 65);
-
-    if (rawWrap) {
-      rawWrap.style.display = 'block';
-      if (rawEl) rawEl.textContent = JSON.stringify(data, null, 2);
+      list.innerHTML = picks.map(p => {
+        const correctCls = p.correct === true ? 'correct' : p.correct === false ? 'wrong' : '';
+        const correctLabel = p.correct === true ? '✓' : p.correct === false ? '✗' : '';
+        const ts = p.ts ? new Date(p.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+        const take = p.take ? '<div class="card-take">"' + escHtml(p.take) + '"</div>' : '';
+        return '<div class="card">' +
+          '<div class="card-header"><span class="teams">' + escHtml(p.home) + ' vs ' + escHtml(p.away) + '</span>' +
+          '<span class="pick ' + p.pick + '">' + p.pick + '</span></div>' +
+          '<div class="card-meta"><span class="conf">' + p.confidence + '% CONF</span>' +
+          '<span>' + ts + '</span>' +
+          (correctLabel ? '<span class="' + correctCls + '">' + correctLabel + '</span>' : '') +
+          '</div>' + take + '</div>';
+      }).join('');
+    } catch (e) {
+      list.innerHTML = '<div class="empty"><span>FAILED TO LOAD: ' + escHtml(e.message) + '</span></div>';
     }
+  }
 
-    toast('roast delivered // ' + user, 'success');
-
-  } catch (e) {
-    out.innerHTML = '<div class="label">error</div><div class="roast-text" style="color:var(--red)">' + e.message + '</div>';
-    toast(e.message, 'error');
-  } finally {
+  /* ==================== ROAST ==================== */
+  document.getElementById('roast-btn').addEventListener('click', async () => {
+    const content = document.getElementById('roast-content');
+    const btn = document.getElementById('roast-btn');
+    btn.disabled = true;
+    btn.textContent = 'ROASTING...';
+    content.innerHTML = '<div class="loading">GENERATING ROAST...</div>';
+    try {
+      const res = await fetch(API + '/api/roast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: roastUser, day: 1 }),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      content.innerHTML = '<div class="roast-text">' + escHtml(data.roast) + '</div>' +
+        (data.blob_id ? '<div class="roast-blob">WALRUS BLOB: ' + data.blob_id + '</div>' : '');
+    } catch (e) {
+      content.innerHTML = '<div class="empty"><span>ROAST FAILED: ' + escHtml(e.message) + '</span></div>';
+    }
     btn.disabled = false;
-    btn.textContent = 'ROAST';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg> ROAST ME';
+  });
+
+  /* ==================== SCHEDULE / PICKS ==================== */
+  const SCHEDULE = [
+    {id:"MEX-SOU",home:"Mexico",away:"South Africa",date:"2026-06-11",time:"19:00"},
+    {id:"SOU-CZE",home:"South Korea",away:"Czechia",date:"2026-06-12",time:"02:00"},
+    {id:"CAN-BOS",home:"Canada",away:"Bosnia-Herzegovina",date:"2026-06-12",time:"19:00"},
+    {id:"UNI-PAR",home:"United States",away:"Paraguay",date:"2026-06-13",time:"01:00"},
+    {id:"QAT-SWI",home:"Qatar",away:"Switzerland",date:"2026-06-13",time:"19:00"},
+    {id:"BRA-MOR",home:"Brazil",away:"Morocco",date:"2026-06-13",time:"22:00"},
+    {id:"HAI-SCO",home:"Haiti",away:"Scotland",date:"2026-06-14",time:"01:00"},
+    {id:"AUS-TUR",home:"Australia",away:"Türkiye",date:"2026-06-14",time:"04:00"},
+    {id:"GER-CUR",home:"Germany",away:"Curaçao",date:"2026-06-14",time:"17:00"},
+    {id:"NET-JAP",home:"Netherlands",away:"Japan",date:"2026-06-14",time:"20:00"},
+    {id:"IVO-ECU",home:"Ivory Coast",away:"Ecuador",date:"2026-06-14",time:"23:00"},
+    {id:"SWE-TUN",home:"Sweden",away:"Tunisia",date:"2026-06-15",time:"02:00"},
+    {id:"SPA-CAP",home:"Spain",away:"Cape Verde",date:"2026-06-15",time:"16:00"},
+    {id:"BEL-EGY",home:"Belgium",away:"Egypt",date:"2026-06-15",time:"19:00"},
+    {id:"SAU-URU",home:"Saudi Arabia",away:"Uruguay",date:"2026-06-15",time:"22:00"},
+    {id:"IRA-NEW",home:"Iran",away:"New Zealand",date:"2026-06-16",time:"01:00"},
+    {id:"FRA-SEN",home:"France",away:"Senegal",date:"2026-06-16",time:"19:00"},
+    {id:"IRA-NOR",home:"Iraq",away:"Norway",date:"2026-06-16",time:"22:00"},
+    {id:"ARG-ALG",home:"Argentina",away:"Algeria",date:"2026-06-17",time:"01:00"},
+    {id:"AUS-JOR",home:"Austria",away:"Jordan",date:"2026-06-17",time:"04:00"},
+    {id:"POR-CON",home:"Portugal",away:"Congo DR",date:"2026-06-17",time:"17:00"},
+    {id:"ENG-CRO",home:"England",away:"Croatia",date:"2026-06-17",time:"20:00"},
+    {id:"GHA-PAN",home:"Ghana",away:"Panama",date:"2026-06-17",time:"23:00"},
+    {id:"UZB-COL",home:"Uzbekistan",away:"Colombia",date:"2026-06-18",time:"02:00"},
+    {id:"CZE-SOU",home:"Czechia",away:"South Africa",date:"2026-06-18",time:"16:00"},
+    {id:"SWI-BOS",home:"Switzerland",away:"Bosnia-Herzegovina",date:"2026-06-18",time:"19:00"},
+    {id:"CAN-QAT",home:"Canada",away:"Qatar",date:"2026-06-18",time:"22:00"},
+    {id:"MEX-SOU1",home:"Mexico",away:"South Korea",date:"2026-06-19",time:"01:00"},
+    {id:"UNI-AUS",home:"United States",away:"Australia",date:"2026-06-19",time:"19:00"},
+    {id:"SCO-MOR",home:"Scotland",away:"Morocco",date:"2026-06-19",time:"22:00"},
+    {id:"BRA-HAI",home:"Brazil",away:"Haiti",date:"2026-06-20",time:"00:30"},
+    {id:"TUR-PAR",home:"Türkiye",away:"Paraguay",date:"2026-06-20",time:"03:00"},
+    {id:"NET-SWE",home:"Netherlands",away:"Sweden",date:"2026-06-20",time:"17:00"},
+    {id:"GER-IVO",home:"Germany",away:"Ivory Coast",date:"2026-06-20",time:"20:00"},
+    {id:"ECU-CUR",home:"Ecuador",away:"Curaçao",date:"2026-06-21",time:"00:00"},
+    {id:"TUN-JAP",home:"Tunisia",away:"Japan",date:"2026-06-21",time:"04:00"},
+    {id:"SPA-SAU",home:"Spain",away:"Saudi Arabia",date:"2026-06-21",time:"16:00"},
+    {id:"BEL-IRA",home:"Belgium",away:"Iran",date:"2026-06-21",time:"19:00"},
+    {id:"URU-CAP",home:"Uruguay",away:"Cape Verde",date:"2026-06-21",time:"22:00"},
+    {id:"NEW-EGY",home:"New Zealand",away:"Egypt",date:"2026-06-22",time:"01:00"},
+    {id:"ARG-AUS",home:"Argentina",away:"Austria",date:"2026-06-22",time:"17:00"},
+    {id:"FRA-IRA",home:"France",away:"Iraq",date:"2026-06-22",time:"21:00"},
+    {id:"NOR-SEN",home:"Norway",away:"Senegal",date:"2026-06-23",time:"00:00"},
+    {id:"JOR-ALG",home:"Jordan",away:"Algeria",date:"2026-06-23",time:"03:00"},
+    {id:"POR-UZB",home:"Portugal",away:"Uzbekistan",date:"2026-06-23",time:"17:00"},
+    {id:"ENG-GHA",home:"England",away:"Ghana",date:"2026-06-23",time:"20:00"},
+    {id:"PAN-CRO",home:"Panama",away:"Croatia",date:"2026-06-23",time:"23:00"},
+    {id:"COL-CON",home:"Colombia",away:"Congo DR",date:"2026-06-24",time:"02:00"},
+    {id:"BOS-QAT",home:"Bosnia-Herzegovina",away:"Qatar",date:"2026-06-24",time:"19:00"},
+    {id:"SWI-CAN",home:"Switzerland",away:"Canada",date:"2026-06-24",time:"19:00"},
+    {id:"MOR-HAI",home:"Morocco",away:"Haiti",date:"2026-06-24",time:"22:00"},
+    {id:"SCO-BRA",home:"Scotland",away:"Brazil",date:"2026-06-24",time:"22:00"},
+    {id:"CZE-MEX",home:"Czechia",away:"Mexico",date:"2026-06-25",time:"01:00"},
+    {id:"SOU-SOU",home:"South Africa",away:"South Korea",date:"2026-06-25",time:"01:00"},
+    {id:"CUR-IVO",home:"Curaçao",away:"Ivory Coast",date:"2026-06-25",time:"20:00"},
+    {id:"ECU-GER",home:"Ecuador",away:"Germany",date:"2026-06-25",time:"20:00"},
+    {id:"JAP-SWE",home:"Japan",away:"Sweden",date:"2026-06-25",time:"23:00"},
+    {id:"TUN-NET",home:"Tunisia",away:"Netherlands",date:"2026-06-25",time:"23:00"},
+    {id:"PAR-AUS",home:"Paraguay",away:"Australia",date:"2026-06-26",time:"02:00"},
+    {id:"TUR-UNI",home:"Türkiye",away:"United States",date:"2026-06-26",time:"02:00"},
+    {id:"NOR-FRA",home:"Norway",away:"France",date:"2026-06-26",time:"19:00"},
+    {id:"SEN-IRA",home:"Senegal",away:"Iraq",date:"2026-06-26",time:"19:00"},
+    {id:"CAP-SAU",home:"Cape Verde",away:"Saudi Arabia",date:"2026-06-27",time:"00:00"},
+    {id:"URU-SPA",home:"Uruguay",away:"Spain",date:"2026-06-27",time:"00:00"},
+    {id:"EGY-IRA",home:"Egypt",away:"Iran",date:"2026-06-27",time:"03:00"},
+    {id:"NEW-BEL",home:"New Zealand",away:"Belgium",date:"2026-06-27",time:"03:00"},
+    {id:"CRO-GHA",home:"Croatia",away:"Ghana",date:"2026-06-27",time:"21:00"},
+    {id:"PAN-ENG",home:"Panama",away:"England",date:"2026-06-27",time:"21:00"},
+    {id:"COL-POR",home:"Colombia",away:"Portugal",date:"2026-06-27",time:"23:30"},
+    {id:"CON-UZB",home:"Congo DR",away:"Uzbekistan",date:"2026-06-27",time:"23:30"},
+    {id:"ALG-AUS",home:"Algeria",away:"Austria",date:"2026-06-28",time:"02:00"},
+    {id:"JOR-ARG",home:"Jordan",away:"Argentina",date:"2026-06-28",time:"02:00"},
+  ];
+
+  function renderMatchList() {
+    const container = document.getElementById('match-list');
+    const byDate = {};
+    SCHEDULE.forEach(m => {
+      if (!byDate[m.date]) byDate[m.date] = [];
+      byDate[m.date].push(m);
+    });
+    let html = '';
+    Object.keys(byDate).sort().forEach(date => {
+      const d = new Date(date + 'T00:00:00');
+      const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      html += '<div style="font-size:9px;font-weight:700;color:var(--accent);letter-spacing:0.1em;padding:8px 14px 4px">' + label + '</div>';
+      byDate[date].forEach(m => {
+        const sel = selectedMatch && selectedMatch.id === m.id ? ' selected' : '';
+        html += '<div class="card match-card' + sel + '" data-mid="' + m.id + '">' +
+          '<div class="vs">' + escHtml(m.home) + ' vs ' + escHtml(m.away) + '</div>' +
+          '<div class="meta">' + m.time + ' UTC · ' + m.id + '</div></div>';
+      });
+    });
+    container.innerHTML = html;
+    container.querySelectorAll('.match-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const m = SCHEDULE.find(s => s.id === card.dataset.mid);
+        if (m) selectMatch(m);
+      });
+    });
   }
-}
 
-// ── Health ──
-async function loadHealth() {
-  var el = $('#health-content');
-  if (!el) return;
-  el.innerHTML = '<div class="loading">pinging relay</div>';
-  try {
-    var r = await fetch(API + '/api/health');
-    var data = await r.json();
-
-    var entries = Object.entries(data).filter(function(kv) { return typeof data[kv[0]] !== 'object'; });
-    var nested = Object.entries(data).filter(function(kv) { return typeof data[kv[0]] === 'object' && data[kv[0]] !== null; });
-
-    var html = '<div class="health-grid">';
-    for (var i = 0; i < entries.length; i++) {
-      var k = entries[i][0], v = entries[i][1];
-      var isOk = v === 'ok' || v === true || v === 'production';
-      html += '<div class="health-cell"><div class="k">' + k + '</div><div class="v ' + (isOk ? 'ok' : '') + '">' + (typeof v === 'boolean' ? (v ? 'true' : 'false') : v) + '</div></div>';
-    }
-    for (var j = 0; j < nested.length; j++) {
-      var sk = nested[j][0], sv = nested[j][1];
-      var flat = Object.entries(sv).slice(0, 4).map(function(e) { return e[0] + ': ' + e[1]; }).join(', ');
-      html += '<div class="health-cell"><div class="k">' + sk + '</div><div class="v">' + flat + '</div></div>';
-    }
-    html += '</div>';
-
-    html += '<div class="raw-toggle" onclick="this.nextElementSibling.classList.toggle(\'open\')">[ toggle raw json ]</div>';
-    html += '<div class="raw-data">' + JSON.stringify(data, null, 2) + '</div>';
-
-    el.innerHTML = html;
-    toast('relay status OK', 'success');
-  } catch (e) {
-    el.innerHTML = '<div class="empty-state">health check failed: ' + e.message + '</div>';
-    toast(e.message, 'error');
+  function selectMatch(m) {
+    selectedMatch = m;
+    selectedPick = null;
+    document.querySelectorAll('.match-card').forEach(c => c.classList.toggle('selected', c.dataset.mid === m.id));
+    const form = document.getElementById('pick-form');
+    form.style.display = 'block';
+    document.getElementById('pick-match-name').textContent = m.home + ' vs ' + m.away;
+    const btns = document.getElementById('pick-buttons');
+    btns.innerHTML = '';
+    [m.home.toUpperCase(), 'DRAW', m.away.toUpperCase()].forEach(label => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      b.addEventListener('click', () => {
+        btns.querySelectorAll('button').forEach(x => x.classList.remove('selected'));
+        b.classList.add('selected');
+        selectedPick = label === 'DRAW' ? 'DRAW' : label === m.home.toUpperCase() ? 'HOME' : 'AWAY';
+      });
+      btns.appendChild(b);
+    });
   }
-}
+
+  // Confidence slider
+  document.getElementById('conf-slider').addEventListener('input', e => {
+    confidence = parseInt(e.target.value);
+    document.getElementById('conf-val').textContent = confidence + '%';
+  });
+
+  // Submit pick
+  document.getElementById('submit-pick').addEventListener('click', async () => {
+    if (!selectedMatch || !selectedPick) return;
+    const btn = document.getElementById('submit-pick');
+    const user = localStorage.getItem('pm_user') || prompt('Your username:') || 'anon';
+    localStorage.setItem('pm_user', user);
+    btn.disabled = true;
+    btn.textContent = 'SUBMITTING...';
+    try {
+      const take = document.getElementById('take-input').value;
+      const res = await fetch(API + '/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user, matchId: selectedMatch.id,
+          home: selectedMatch.home, away: selectedMatch.away,
+          pick: selectedPick, confidence, take,
+        }),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      btn.textContent = '✓ STORED ON WALRUS';
+      btn.style.borderColor = '#4ade80';
+      btn.style.color = '#4ade80';
+      setTimeout(() => {
+        btn.textContent = 'SUBMIT PREDICTION';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+        selectedMatch = null;
+        selectedPick = null;
+        document.getElementById('pick-form').style.display = 'none';
+        document.querySelectorAll('.match-card').forEach(c => c.classList.remove('selected'));
+      }, 2000);
+    } catch (e) {
+      btn.textContent = 'FAILED: ' + e.message;
+      setTimeout(() => { btn.textContent = 'SUBMIT PREDICTION'; }, 3000);
+    }
+    btn.disabled = false;
+  });
+
+  /* ==================== STATUS ==================== */
+  async function loadStatus() {
+    try {
+      const res = await fetch(API + '/api/recap?user=' + encodeURIComponent(statusUser));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const r = data.record || {};
+      document.getElementById('stat-total').textContent = r.total || 0;
+      document.getElementById('stat-correct').textContent = r.correct || 0;
+      document.getElementById('stat-accuracy').textContent = r.accuracy ? Math.round(r.accuracy * 100) + '%' : '0%';
+      document.getElementById('stat-conf').textContent = r.avgConfidence ? r.avgConfidence + '%' : '-';
+
+      // Team breakdown
+      const teams = r.byTeamPicked || {};
+      const sorted = Object.entries(teams).sort((a, b) => b[1].picks - a[1].picks).slice(0, 15);
+      const container = document.getElementById('team-stats');
+      if (sorted.length === 0) {
+        container.innerHTML = '<div class="empty"><span>NO TEAM DATA YET</span></div>';
+        return;
+      }
+      container.innerHTML = '<div style="font-size:9px;font-weight:700;color:var(--accent);letter-spacing:0.1em;padding:4px 0 8px">TOP PICKED TEAMS</div>' +
+        sorted.map(([team, d]) =>
+          '<div class="card" style="padding:8px 14px"><div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<span style="font-size:11px;font-weight:700;color:#fff">' + escHtml(team) + '</span>' +
+          '<span style="font-size:10px;font-weight:700;color:var(--accent-soft)">' + d.picks + ' picks</span>' +
+          '</div></div>'
+        ).join('');
+    } catch (e) {
+      document.getElementById('stats-grid').innerHTML = '<div class="empty" style="grid-column:1/-1"><span>FAILED TO LOAD</span></div>';
+    }
+  }
+
+  /* ==================== HELPERS ==================== */
+  function escHtml(s) {
+    if (!s) return '';
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  /* ==================== INIT ==================== */
+  renderMatchList();
+  loadFeed();
+  initLogo();
+
+})();

@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --panel-dark: #0A0A0F;
+    --panel-mid: #2A2010;
+    --panel-light: #E8C766;
+    --accent: #D4A017;
+    --accent-soft: #F0C75E;
+    --text-muted: #8B7340;
+    --background: 240 20% 4%;
+    --foreground: 0 0% 100%;
+    --card: 240 20% 4%;
+    --card-foreground: 0 0% 100%;
+    --popover: 240 20% 4%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 43 80% 46%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 30% 12%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 40 30% 12%;
+    --muted-foreground: 40 30% 40%;
+    --accent-hsl: 43 80% 46%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 40 30% 12%;
+    --input: 40 30% 12%;
+    --ring: 43 80% 46%;
+    --radius: 4px;
+  }
+
+  * { @apply border-border; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    @apply bg-[var(--panel-dark)] text-white antialiased;
+    overflow: hidden;
+  }
+}
+
+@layer components {
+  /* Glowing border effect */
+  .glow-border {
+    border: 1px solid var(--panel-mid);
+    box-shadow: 0 0 8px rgba(212, 160, 23, 0.15), inset 0 0 8px rgba(212, 160, 23, 0.05);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
+  .glow-border:hover {
+    border-color: rgba(212, 160, 23, 0.5);
+    box-shadow: 0 0 16px rgba(212, 160, 23, 0.25), inset 0 0 12px rgba(212, 160, 23, 0.08);
+  }
+
+  .glow-border-strong {
+    border: 1px solid rgba(212, 160, 23, 0.4);
+    box-shadow: 0 0 12px rgba(212, 160, 23, 0.2), inset 0 0 10px rgba(212, 160, 23, 0.08);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 10px rgba(212, 160, 23, 0.5);
+  }
+
+  .glow-text-subtle {
+    text-shadow: 0 0 6px rgba(212, 160, 23, 0.3);
+  }
+
+  .amber-badge {
+    background: rgba(212, 160, 23, 0.15);
+    border: 1px solid rgba(212, 160, 23, 0.3);
+    color: var(--accent-soft);
+  }
+
+  .score-input {
+    background: rgba(212, 160, 23, 0.08);
+    border: 1px solid rgba(212, 160, 23, 0.25);
+    color: white;
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.25rem;
+    width: 48px;
+    height: 40px;
+    border-radius: 4px;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .score-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(212, 160, 23, 0.3);
+  }
+
+  /* Data panel style */
+  .data-panel {
+    background: rgba(10, 10, 15, 0.85);
+    border: 1px solid var(--panel-mid);
+    backdrop-filter: blur(8px);
+  }
+
+  /* Scrollbar styling */
+  .custom-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background: var(--panel-mid);
+    border-radius: 2px;
+  }
+
+  .custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(212, 160, 23, 0.15); }
+  50% { box-shadow: 0 0 16px rgba(212, 160, 23, 0.3); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}

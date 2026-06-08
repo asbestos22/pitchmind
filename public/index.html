@@ -1,427 +1,252 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PitchMind</title>
-<link rel="icon" type="image/png" href="data:image/png;base64,">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PitchMind — WC2026 Prediction Roaster</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>⚽</text></svg>">
 <style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-
+*{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0a0a0a;
-  --surface:#111111;
-  --surface2:#181818;
-  --border:#252525;
-  --text:#d4d4d4;
-  --dim:#666;
-  --bright:#fff;
-  --yellow:#FFD000;
-  --yellow-dim:#B89500;
-  --yellow-bg:rgba(255,208,0,.08);
-  --yellow-border:rgba(255,208,0,.25);
-  --red:#D32F2F;
-  --green:#2E7D32;
-  --mono:'SF Mono','Fira Code','Cascadia Code',Consolas,monospace;
-  --sans:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;
+  --panel-dark:#0f0f0f;
+  --panel-mid:#1a1a1a;
+  --panel-light:#e8e8e8;
+  --accent:#D4A017;
+  --accent-soft:#E6AF2E;
+  --text-muted:#6b6b6b;
+  --glow:0 0 20px rgba(212,160,23,0.15),0 0 40px rgba(212,160,23,0.05);
+  --glow-strong:0 0 20px rgba(212,160,23,0.3),0 0 60px rgba(212,160,23,0.1);
 }
-
-html{font-size:15px}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
-
-/* ── NAV ── */
-.topbar{
-  position:sticky;top:0;z-index:100;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 24px;height:52px;
-  background:var(--surface);border-bottom:1px solid var(--border);
-}
-.topbar .brand{
-  display:flex;align-items:center;gap:10px;
-}
-.topbar .brand img{
-  width:28px;height:28px;
-}
-.topbar .brand-text{
-  font-family:var(--mono);font-size:.75rem;font-weight:700;
-  color:var(--yellow);text-transform:uppercase;letter-spacing:3px;
-}
-.topbar .meta{
-  font-family:var(--mono);font-size:.6rem;color:var(--dim);
-  letter-spacing:1px;
-}
-
-/* ── TABS ── */
-.nav-tabs{
-  display:flex;gap:0;border-bottom:1px solid var(--border);
-  background:var(--surface);padding:0 24px;
-}
-.nav-tab{
-  padding:12px 20px;font-family:var(--mono);font-size:.7rem;
-  text-transform:uppercase;letter-spacing:2px;color:var(--dim);
-  cursor:pointer;border-bottom:2px solid transparent;
-  transition:color .15s,border-color .15s;
-}
-.nav-tab:hover{color:var(--text)}
-.nav-tab.active{color:var(--yellow);border-bottom-color:var(--yellow)}
-
-/* ── MAIN ── */
-.main{max-width:920px;margin:0 auto;padding:24px}
-.panel{display:none}.panel.active{display:block}
-
-/* ── SECTION HEADERS ── */
-.section-head{
-  display:flex;align-items:baseline;gap:12px;
-  margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);
-}
-.section-head h2{
-  font-family:var(--mono);font-size:.78rem;font-weight:600;
-  text-transform:uppercase;letter-spacing:2px;color:var(--yellow);
-}
-.section-head .count{
-  font-family:var(--mono);font-size:.62rem;color:var(--dim);
-}
-
-/* ── STATS ROW ── */
-.stats-row{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
-  background:var(--border);border:1px solid var(--border);margin-bottom:24px;
-}
-.stat-cell{
-  background:var(--surface);padding:14px 16px;text-align:center;
-}
-.stat-cell .label{font-family:var(--mono);font-size:.58rem;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
-.stat-cell .value{font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--bright)}
-.stat-cell .value.yellow{color:var(--yellow)}
-.stat-cell .value.green{color:var(--green)}
-.stat-cell .value.red{color:var(--red)}
-
-/* ── PREDICTION FEED ── */
-.pred-feed{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border)}
-.pred-row{
-  display:grid;grid-template-columns:1fr auto auto auto;
-  align-items:center;gap:16px;
-  padding:14px 16px;background:var(--surface);
-  font-family:var(--mono);font-size:.76rem;
-  transition:background .15s;
-}
-.pred-row:hover{background:var(--surface2)}
-.pred-row .match{color:var(--bright);font-weight:600}
-.pred-row .vs{color:var(--dim);font-weight:400}
-.pred-row .pick{
-  font-size:.62rem;font-weight:700;text-transform:uppercase;
-  padding:3px 10px;letter-spacing:1px;
-}
-.pred-row .pick.HOME{background:rgba(46,125,50,.15);color:var(--green)}
-.pred-row .pick.AWAY{background:rgba(211,47,47,.15);color:var(--red)}
-.pred-row .pick.DRAW{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-border)}
-.pred-row .conf{color:var(--dim);font-size:.68rem;min-width:36px;text-align:right}
-.pred-row .status{font-size:.68rem;min-width:20px;text-align:center}
-
-/* ── ROAST ── */
-.roast-area{
-  background:var(--surface);border:1px solid var(--border);
-  padding:32px 24px;min-height:200px;
-}
-.roast-area .label{
-  font-family:var(--mono);font-size:.62rem;font-weight:700;
-  color:var(--yellow);text-transform:uppercase;letter-spacing:3px;
-  margin-bottom:16px;
-}
-.roast-text{
-  font-family:var(--sans);font-size:1.05rem;line-height:1.8;
-  color:var(--text);
-}
-.roast-text .word{opacity:0;transition:opacity .2s}
-.roast-text .word.visible{opacity:1}
-.roast-cursor{
-  display:inline-block;width:2px;height:1em;background:var(--yellow);
-  animation:blink-cursor .6s step-end infinite;vertical-align:text-bottom;
-  margin-left:2px;
-}
-@keyframes blink-cursor{50%{opacity:0}}
-
-/* ── FORM ── */
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.form-full{grid-column:1/-1}
-.form-group{display:flex;flex-direction:column;gap:6px}
-.form-group label{
-  font-family:var(--mono);font-size:.58rem;font-weight:600;
-  text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);
-}
-.form-group input,.form-group select,.form-group textarea{
-  background:var(--bg);border:1px solid var(--border);
-  padding:10px 12px;color:var(--text);font-family:var(--mono);
-  font-size:.82rem;outline:none;transition:border-color .15s;
-  -webkit-appearance:none;border-radius:0;
-}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
-  border-color:var(--yellow);
-}
-.form-group textarea{resize:vertical;min-height:64px;font-family:var(--sans)}
-.form-group select{cursor:pointer}
-
-/* Range slider */
-.slider-row{display:flex;align-items:center;gap:12px}
-.slider-row input[type=range]{
-  flex:1;-webkit-appearance:none;appearance:none;
-  height:3px;background:var(--border);outline:none;
-}
-.slider-row input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:16px;height:16px;
-  background:var(--yellow);cursor:pointer;border-radius:0;
-}
-.slider-val{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--yellow);min-width:44px}
-
-/* Buttons */
-.btn{
-  font-family:var(--mono);font-size:.7rem;font-weight:700;
-  text-transform:uppercase;letter-spacing:2px;
-  padding:12px 24px;border:none;cursor:pointer;
-  transition:background .15s,opacity .15s;
-  border-radius:0;
-}
-.btn-primary{background:var(--yellow);color:#000}
-.btn-primary:hover{opacity:.85}
-.btn-primary:disabled{opacity:.3;cursor:not-allowed}
-.btn-outline{
-  background:transparent;color:var(--yellow);
-  border:1px solid var(--yellow-border);
-}
-.btn-outline:hover{background:var(--yellow-bg)}
-.btn-outline:disabled{opacity:.3;cursor:not-allowed}
-
-/* ── HEALTH ── */
-.health-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)}
-.health-cell{background:var(--surface);padding:14px 16px}
-.health-cell .k{font-family:var(--mono);font-size:.58rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-.health-cell .v{font-family:var(--mono);font-size:.8rem;color:var(--bright);word-break:break-all}
-.health-cell .v.ok{color:var(--green)}
-
-/* ── TOAST ── */
-#toasts{position:fixed;top:60px;right:16px;z-index:200;display:flex;flex-direction:column;gap:6px}
-.toast{
-  font-family:var(--mono);font-size:.7rem;padding:10px 16px;
-  animation:slide-in .25s ease;
-}
-.toast.success{background:rgba(46,125,50,.12);color:var(--green);border-left:3px solid var(--green)}
-.toast.error{background:rgba(211,47,47,.12);color:var(--red);border-left:3px solid var(--red)}
-.toast.info{background:var(--yellow-bg);color:var(--yellow);border-left:3px solid var(--yellow)}
-@keyframes slide-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-
-/* ── LOADING ── */
-.loading{padding:40px;text-align:center;font-family:var(--mono);font-size:.72rem;color:var(--dim)}
-.loading::after{content:'...';animation:dots 1.5s steps(4,end) infinite}
-@keyframes dots{0%{content:'.'}33%{content:'..'}66%{content:'...'}}
-
-/* ── EMPTY ── */
-.empty-state{
-  padding:48px 24px;text-align:center;
-  font-family:var(--mono);font-size:.76rem;color:var(--dim);
-}
-.empty-state strong{color:var(--yellow)}
-
-/* ── RAW DATA ── */
-.raw-toggle{
-  font-family:var(--mono);font-size:.62rem;color:var(--dim);
-  cursor:pointer;margin-top:16px;
-}
-.raw-toggle:hover{color:var(--text)}
-.raw-data{
-  display:none;margin-top:8px;padding:12px;
-  background:var(--bg);border:1px solid var(--border);
-  font-family:var(--mono);font-size:.68rem;color:var(--dim);
-  white-space:pre-wrap;word-break:break-all;
-  max-height:200px;overflow:auto;line-height:1.6;
-}
-.raw-data.open{display:block}
-
-/* ── FOOTER ── */
-.footer{
-  margin-top:48px;padding:16px 24px;border-top:1px solid var(--border);
-  display:flex;justify-content:space-between;align-items:center;
-  font-family:var(--mono);font-size:.58rem;color:var(--dim);
-}
-.footer .walrus{
-  display:flex;align-items:center;gap:6px;
-  color:var(--yellow-dim);
-}
-
-/* ── SCHEDULE GRID ── */
-.sched-grid{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border)}
-.match-card{
-  display:grid;grid-template-columns:72px 1fr auto auto 1fr 72px;
-  align-items:center;gap:12px;
-  padding:12px 16px;background:var(--surface);
-  cursor:pointer;transition:background .15s;
-}
-.match-card:hover{background:var(--surface2)}
-.match-card.selected{background:var(--yellow-bg);border-left:3px solid var(--yellow)}
-.match-card .time{font-family:var(--mono);font-size:.62rem;color:var(--dim);text-align:right}
-.match-card .group{font-family:var(--mono);font-size:.58rem;color:var(--yellow);text-align:center;padding:2px 6px;background:var(--yellow-bg);border:1px solid var(--yellow-border)}
-.match-card .home-team,.match-card .away-team{font-family:var(--sans);font-size:.82rem;color:var(--bright);font-weight:600}
-.match-card .home-team{text-align:right}
-.match-card .away-team{text-align:left}
-.match-card .vs{font-family:var(--mono);font-size:.6rem;color:var(--dim);text-align:center}
-.match-card .venue{font-family:var(--mono);font-size:.58rem;color:var(--dim);text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.match-card.picked{border-left:3px solid var(--green);background:rgba(46,125,50,.06)}
-.match-card.picked .home-team,.match-card.picked .away-team{color:var(--dim)}
-.match-card.picked .tag{font-family:var(--mono);font-size:.58rem;color:var(--green);text-transform:uppercase;letter-spacing:1px}
-
-/* Date tabs */
-.date-tab{
-  padding:10px 16px;font-family:var(--mono);font-size:.62rem;
-  text-transform:uppercase;letter-spacing:1px;color:var(--dim);
-  cursor:pointer;border-bottom:2px solid transparent;
-  white-space:nowrap;transition:color .15s,border-color .15s;
-}
-.date-tab:hover{color:var(--text)}
-.date-tab.active{color:var(--yellow);border-bottom-color:var(--yellow)}
-
-/* Prediction bar */
-.pred-bar{
-  position:sticky;bottom:0;z-index:50;
-  margin-top:16px;
-  border:1px solid var(--yellow-border);
-  background:var(--surface);
-}
-.pred-bar-inner{padding:14px 16px}
-.pred-bar-match{
-  font-family:var(--sans);font-size:.82rem;font-weight:700;
-  color:var(--bright);margin-bottom:10px;
-}
-.pred-bar-controls{
-  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-}
-
-/* Pick buttons */
-.pick-group{display:flex;gap:1px;background:var(--border)}
-.pick-btn{
-  padding:8px 16px;font-family:var(--mono);font-size:.65rem;
-  font-weight:700;text-transform:uppercase;letter-spacing:1px;
-  background:var(--bg);color:var(--dim);border:none;cursor:pointer;
-  transition:background .15s,color .15s;
-}
-.pick-btn:hover{color:var(--text);background:var(--surface2)}
-.pick-btn.active{color:var(--yellow);background:var(--yellow-bg);border:1px solid var(--yellow-border)}
-
-/* ── RESPONSIVE ── */
-@media(max-width:640px){
-  .stats-row{grid-template-columns:1fr 1fr}
-  .pred-row{grid-template-columns:1fr;gap:8px}
-  .form-grid{grid-template-columns:1fr}
-  .health-grid{grid-template-columns:1fr}
-  .nav-tab{padding:10px 12px;font-size:.62rem;letter-spacing:1px}
-  .footer{flex-direction:column;gap:8px;text-align:center}
-  .match-card{grid-template-columns:50px 1fr 20px 1fr 50px;gap:6px;font-size:.72rem}
-  .match-card .vs,.match-card .group{display:none}
-  .pred-bar-controls{flex-direction:column;align-items:stretch}
+html,body{height:100%;background:var(--panel-dark);color:var(--panel-light);font-family:'Inter',system-ui,-apple-system,sans-serif;overflow:hidden}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+/* LAYOUT */
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+header{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:56px;border-bottom:1px solid var(--panel-mid);box-shadow:var(--glow-strong);position:relative;z-index:10}
+header .brand{display:flex;align-items:center;gap:12px}
+header .logo-3d{width:36px;height:36px;flex-shrink:0}
+header h1{font-size:15px;font-weight:900;letter-spacing:-0.02em;color:#fff;line-height:1}
+header .sub{font-size:8px;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);margin-top:2px}
+header .meta{font-size:8px;font-weight:700;letter-spacing:0.15em;color:var(--accent)}
+/* NAV */
+nav{display:flex;border-bottom:1px solid var(--panel-mid)}
+nav button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 0;font-size:10px;font-weight:700;letter-spacing:0.15em;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;transition:all .15s}
+nav button:hover{color:var(--panel-light);background:rgba(212,160,23,0.03)}
+nav button.active{color:var(--accent-soft);border-bottom-color:var(--accent);background:rgba(212,160,23,0.08)}
+nav button svg{width:14px;height:14px}
+/* MAIN */
+main{flex:1;overflow:hidden;position:relative}
+.tab-panel{display:none;height:100%;flex-direction:column;overflow:hidden}
+.tab-panel.active{display:flex}
+/* FOOTER */
+footer{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:32px;border-top:1px solid var(--panel-mid)}
+footer span{font-size:8px;font-weight:700;letter-spacing:0.15em}
+footer .left{color:var(--text-muted)}
+footer .right{color:var(--accent)}
+/* DATA PANEL */
+.data-panel{background:rgba(212,160,23,0.05);border:1px solid var(--panel-mid)}
+.glow-border{box-shadow:var(--glow);border:1px solid rgba(212,160,23,0.15)}
+.glow-border-strong{box-shadow:var(--glow-strong);border:1px solid rgba(212,160,23,0.25)}
+/* CARDS */
+.card{background:var(--panel-mid);border:1px solid rgba(255,255,255,0.06);padding:12px 14px;transition:border-color .2s}
+.card:hover{border-color:rgba(212,160,23,0.2)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.card-header .teams{font-size:12px;font-weight:700;color:#fff}
+.card-header .pick{font-size:9px;font-weight:700;letter-spacing:0.1em;padding:2px 8px;border:1px solid}
+.card-header .pick.HOME{color:#4ade80;border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.08)}
+.card-header .pick.AWAY{color:#60a5fa;border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.08)}
+.card-header .pick.DRAW{color:var(--accent-soft);border-color:rgba(212,160,23,0.3);background:rgba(212,160,23,0.08)}
+.card-meta{display:flex;align-items:center;gap:12px;font-size:9px;color:var(--text-muted);font-weight:600}
+.card-meta .conf{color:var(--accent-soft)}
+.card-meta .correct{color:#4ade80}
+.card-meta .wrong{color:#ef4444}
+.card-take{margin-top:6px;font-size:10px;color:var(--panel-light);font-style:italic;opacity:0.7}
+/* FILTER BAR */
+.filter-bar{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--panel-mid);flex-shrink:0}
+.filter-bar button{padding:4px 12px;font-size:9px;font-weight:700;letter-spacing:0.1em;border:1px solid var(--panel-mid);background:none;color:var(--text-muted);cursor:pointer;transition:all .15s}
+.filter-bar button:hover{color:var(--panel-light)}
+.filter-bar button.active{color:var(--accent-soft);border-color:var(--accent);background:rgba(212,160,23,0.1)}
+.filter-bar .count{margin-left:auto;font-size:9px;font-weight:700;color:var(--text-muted)}
+/* SCROLLABLE */
+.scroll-y{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.scroll-y::-webkit-scrollbar{width:4px}
+.scroll-y::-webkit-scrollbar-track{background:transparent}
+.scroll-y::-webkit-scrollbar-thumb{background:var(--panel-mid);border-radius:2px}
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;height:100%;font-size:10px;font-weight:700;color:var(--text-muted);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+/* ROAST */
+.roast-box{padding:16px;flex-shrink:0}
+.roast-btn{display:flex;align-items:center;gap:8px;padding:10px 20px;border:1px solid var(--accent);background:rgba(212,160,23,0.08);color:var(--accent-soft);font-size:10px;font-weight:700;letter-spacing:0.15em;cursor:pointer;transition:all .2s;width:100%;justify-content:center}
+.roast-btn:hover{background:var(--accent);color:var(--panel-dark)}
+.roast-btn svg{width:16px;height:16px}
+.roast-text{margin-top:16px;padding:16px;white-space:pre-wrap;line-height:1.7;font-size:13px;color:var(--panel-light);border-left:3px solid var(--accent);background:rgba(212,160,23,0.04)}
+.roast-blob{font-size:9px;color:var(--text-muted);margin-top:6px;word-break:break-all}
+/* PICK TAB */
+.pick-header{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--panel-mid);flex-shrink:0}
+.pick-header .stat{display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:var(--panel-light)}
+.pick-header .stat svg{width:10px;height:10px;color:var(--accent)}
+.match-card{padding:12px 14px;cursor:pointer}
+.match-card.selected{border-color:var(--accent);background:rgba(212,160,23,0.06)}
+.match-card .vs{font-size:12px;font-weight:700;color:#fff}
+.match-card .meta{font-size:9px;color:var(--text-muted);margin-top:4px}
+.pick-buttons{display:flex;gap:6px;margin-top:10px}
+.pick-buttons button{flex:1;padding:8px;font-size:9px;font-weight:700;letter-spacing:0.08em;border:1px solid var(--panel-mid);background:none;color:var(--text-muted);cursor:pointer;transition:all .15s}
+.pick-buttons button:hover{border-color:var(--accent);color:var(--panel-light)}
+.pick-buttons button.selected{border-color:var(--accent);color:var(--accent-soft);background:rgba(212,160,23,0.1)}
+.conf-row{display:flex;align-items:center;gap:12px;margin-top:10px}
+.conf-row label{font-size:9px;font-weight:700;color:var(--text-muted);letter-spacing:0.1em}
+.conf-row input[type=range]{flex:1;accent-color:var(--accent)}
+.conf-row .val{font-size:11px;font-weight:900;color:var(--accent-soft);min-width:30px;text-align:right}
+.submit-pick{margin-top:12px;width:100%;padding:10px;border:1px solid var(--accent);background:rgba(212,160,23,0.1);color:var(--accent-soft);font-size:10px;font-weight:700;letter-spacing:0.15em;cursor:pointer;transition:all .2s}
+.submit-pick:hover{background:var(--accent);color:var(--panel-dark)}
+.submit-pick:disabled{opacity:0.3;cursor:not-allowed}
+/* STATUS TAB */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px 16px;flex-shrink:0}
+.stat-card{padding:14px;text-align:center}
+.stat-card .num{font-size:24px;font-weight:900;color:var(--accent-soft);line-height:1}
+.stat-card .label{font-size:8px;font-weight:700;letter-spacing:0.15em;color:var(--text-muted);margin-top:4px}
+/* USER SELECTOR */
+.user-select{display:flex;gap:6px;padding:8px 16px;border-bottom:1px solid var(--panel-mid);flex-shrink:0}
+.user-select button{padding:4px 12px;font-size:9px;font-weight:700;letter-spacing:0.08em;border:1px solid var(--panel-mid);background:none;color:var(--text-muted);cursor:pointer;transition:all .15s}
+.user-select button:hover{color:var(--panel-light)}
+.user-select button.active{color:var(--accent-soft);border-color:var(--accent);background:rgba(212,160,23,0.1)}
+/* EMPTY STATE */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px}
+.empty svg{width:24px;height:24px;color:var(--text-muted)}
+.empty span{font-size:10px;font-weight:700;color:var(--text-muted)}
+/* RESPONSIVE */
+@media(max-width:480px){
+  header h1{font-size:13px}
+  header .sub{font-size:7px}
+  nav button{font-size:9px;padding:10px 0}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
 }
 </style>
 </head>
 <body>
-
-<div class="topbar">
-  <div class="brand">
-    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23FFD000'/%3E%3Ccircle cx='32' cy='32' r='12' fill='%230A0A0A'/%3E%3Ccircle cx='32' cy='20' r='4' fill='%230A0A0A'/%3E%3Ccircle cx='22' cy='32' r='4' fill='%230A0A0A'/%3E%3Ccircle cx='42' cy='32' r='4' fill='%230A0A0A'/%3E%3C/svg%3E" alt="PM">
-    <span class="brand-text">PitchMind</span>
-  </div>
-  <span class="meta">WC2026 // WALRUS MEMORY</span>
-</div>
-
-<div class="nav-tabs">
-  <div class="nav-tab active" data-panel="predictions">Feed</div>
-  <div class="nav-tab" data-panel="roast">Roast</div>
-  <div class="nav-tab" data-panel="submit">New Pick</div>
-  <div class="nav-tab" data-panel="health">Status</div>
-</div>
-
-<div class="main">
-
-  <!-- FEED -->
-  <div id="predictions" class="panel active">
-    <div class="section-head">
-      <h2>Prediction Feed</h2>
-      <span class="count" id="pred-count"></span>
+<div class="app">
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <canvas id="logo3d" class="logo-3d" width="36" height="36"></canvas>
+      <div>
+        <h1>PITCHMIND</h1>
+        <p class="sub">WORLD CUP PREDICTOR</p>
+      </div>
     </div>
-    <div id="pred-stats"></div>
-    <div id="pred-list"><div class="loading">loading predictions</div></div>
-  </div>
+    <span class="meta">WC2026 // WALRUS MEMORY</span>
+  </header>
 
-  <!-- ROAST -->
-  <div id="roast" class="panel">
-    <div class="section-head">
-      <h2>Roast Generator</h2>
-    </div>
-    <div style="display:flex;gap:12px;margin-bottom:20px">
-      <input id="roast-user" type="text" placeholder="username" style="flex:1;background:var(--bg);border:1px solid var(--border);padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:.82rem;outline:none;border-radius:0">
-      <button id="roastBtn" class="btn btn-outline" onclick="doRoast()">ROAST</button>
-    </div>
-    <div id="roast-output" class="roast-area">
-      <div class="label">output</div>
-      <div class="roast-text" style="color:var(--dim);font-style:italic">enter a username and hit roast</div>
-    </div>
-    <div id="roast-raw" style="display:none">
-      <div class="raw-toggle" onclick="this.nextElementSibling.classList.toggle('open')">[ toggle raw json ]</div>
-      <div class="raw-data" id="roast-raw-data"></div>
-    </div>
-  </div>
+  <!-- NAV -->
+  <nav>
+    <button class="active" data-tab="feed">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 010 8.49m-8.48 0a6 6 0 010-8.49m11.31-2.82a10 10 0 010 14.14m-14.14 0a10 10 0 010-14.14"/></svg>
+      FEED
+    </button>
+    <button data-tab="roast">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg>
+      ROAST
+    </button>
+    <button data-tab="newpick">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      NEW PICK
+    </button>
+    <button data-tab="status">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      STATUS
+    </button>
+  </nav>
 
-  <!-- NEW PICK -->
-  <div id="submit" class="panel">
-    <div class="section-head">
-      <h2>Pick a Match</h2>
-      <span class="count" id="sched-count"></span>
-    </div>
-
-    <!-- User name -->
-    <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px">
-      <label style="font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);white-space:nowrap">Your Name</label>
-      <input id="pred-user" type="text" placeholder="e.g. F5" style="flex:1;max-width:200px;background:var(--bg);border:1px solid var(--border);padding:8px 10px;color:var(--yellow);font-family:var(--mono);font-size:.82rem;outline:none">
+  <!-- MAIN -->
+  <main>
+    <!-- FEED TAB -->
+    <div class="tab-panel active" id="tab-feed">
+      <div class="filter-bar">
+        <button class="active" data-filter="all">ALL</button>
+        <button data-filter="recent">RECENT</button>
+        <span class="count" id="feed-count">0 PICKS</span>
+      </div>
+      <div class="user-select" id="feed-users">
+        <button class="active" data-user="F5">F5</button>
+        <button data-user="Aleko">ALEKO</button>
+        <button data-user="Tita">TITA</button>
+        <button data-user="Rex">REX</button>
+        <button data-user="Nina">NINA</button>
+      </div>
+      <div class="scroll-y" id="feed-list">
+        <div class="loading">LOADING PREDICTIONS...</div>
+      </div>
     </div>
 
-    <!-- Date tabs -->
-    <div id="date-tabs" style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto"></div>
-
-    <!-- Match schedule grid -->
-    <div id="sched-grid" class="sched-grid"></div>
-
-    <!-- Prediction bar (hidden until match selected) -->
-    <div id="pred-bar" class="pred-bar" style="display:none">
-      <div class="pred-bar-inner">
-        <div class="pred-bar-match" id="pred-bar-match"></div>
-        <div class="pred-bar-controls">
-          <div class="pick-group" id="pick-group"></div>
-          <div class="slider-row" style="min-width:140px">
-            <input type="range" id="confSlider" min="0" max="100" value="70">
-            <span class="slider-val" id="confVal">70%</span>
-          </div>
-          <div style="flex:1">
-            <input id="pred-take" type="text" placeholder="hot take (optional)" style="width:100%;background:var(--bg);border:1px solid var(--border);padding:8px 10px;color:var(--text);font-family:var(--mono);font-size:.72rem;outline:none">
-          </div>
-          <button id="submitBtn" class="btn btn-primary" disabled>SUBMIT</button>
+    <!-- ROAST TAB -->
+    <div class="tab-panel" id="tab-roast">
+      <div class="user-select" id="roast-users">
+        <button class="active" data-user="F5">F5</button>
+        <button data-user="Aleko">ALEKO</button>
+        <button data-user="Tita">TITA</button>
+        <button data-user="Rex">REX</button>
+        <button data-user="Nina">NINA</button>
+      </div>
+      <div class="roast-box">
+        <button class="roast-btn" id="roast-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg>
+          ROAST ME
+        </button>
+      </div>
+      <div class="scroll-y" id="roast-content">
+        <div class="empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg>
+          <span>PRESS ROAST ME TO GET BURNED</span>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- STATUS -->
-  <div id="health" class="panel">
-    <div class="section-head">
-      <h2>Service Status</h2>
+    <!-- NEW PICK TAB -->
+    <div class="tab-panel" id="tab-newpick">
+      <div class="pick-header">
+        <div class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="pick-match-count">72 MATCHES</span></div>
+      </div>
+      <div class="scroll-y" id="match-list"></div>
+      <div id="pick-form" style="display:none;padding:12px 16px;border-top:1px solid var(--panel-mid);flex-shrink:0">
+        <div id="pick-match-name" style="font-size:12px;font-weight:700;color:#fff;margin-bottom:10px"></div>
+        <div class="pick-buttons" id="pick-buttons"></div>
+        <div class="conf-row">
+          <label>CONFIDENCE</label>
+          <input type="range" id="conf-slider" min="10" max="99" value="70">
+          <span class="val" id="conf-val">70%</span>
+        </div>
+        <input type="text" id="take-input" placeholder="Hot take (optional)" style="width:100%;margin-top:8px;padding:8px;border:1px solid var(--panel-mid);background:rgba(212,160,23,0.05);color:var(--panel-light);font-size:10px;outline:none">
+        <button class="submit-pick" id="submit-pick">SUBMIT PREDICTION</button>
+      </div>
     </div>
-    <div id="health-content"><div class="loading">pinging relay</div></div>
-  </div>
 
+    <!-- STATUS TAB -->
+    <div class="tab-panel" id="tab-status">
+      <div class="user-select" id="status-users">
+        <button class="active" data-user="F5">F5</button>
+        <button data-user="Aleko">ALEKO</button>
+        <button data-user="Tita">TITA</button>
+        <button data-user="Rex">REX</button>
+        <button data-user="Nina">NINA</button>
+      </div>
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card data-panel glow-border"><div class="num" id="stat-total">-</div><div class="label">TOTAL PICKS</div></div>
+        <div class="stat-card data-panel glow-border"><div class="num" id="stat-correct">-</div><div class="label">CORRECT</div></div>
+        <div class="stat-card data-panel glow-border"><div class="num" id="stat-accuracy">-</div><div class="label">ACCURACY</div></div>
+        <div class="stat-card data-panel glow-border"><div class="num" id="stat-conf">-</div><div class="label">AVG CONFIDENCE</div></div>
+      </div>
+      <div class="scroll-y" id="team-stats"></div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <span class="left">WC 2026 // LIVE DATA</span>
+    <span class="right">PITCHMIND v0.2.0</span>
+  </footer>
 </div>
 
-<div class="footer">
-  <span>pitchmind v0.1.0</span>
-  <span class="walrus">walrus memory // decentralized prediction storage</span>
-</div>
-
-<div id="toasts"></div>
-
-<script src="/app.js?v=5"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
