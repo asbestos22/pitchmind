@@ -247,6 +247,64 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
   color:var(--yellow-dim);
 }
 
+/* ── SCHEDULE GRID ── */
+.sched-grid{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border)}
+.match-card{
+  display:grid;grid-template-columns:72px 1fr auto auto 1fr 72px;
+  align-items:center;gap:12px;
+  padding:12px 16px;background:var(--surface);
+  cursor:pointer;transition:background .15s;
+}
+.match-card:hover{background:var(--surface2)}
+.match-card.selected{background:var(--yellow-bg);border-left:3px solid var(--yellow)}
+.match-card .time{font-family:var(--mono);font-size:.62rem;color:var(--dim);text-align:right}
+.match-card .group{font-family:var(--mono);font-size:.58rem;color:var(--yellow);text-align:center;padding:2px 6px;background:var(--yellow-bg);border:1px solid var(--yellow-border)}
+.match-card .home-team,.match-card .away-team{font-family:var(--sans);font-size:.82rem;color:var(--bright);font-weight:600}
+.match-card .home-team{text-align:right}
+.match-card .away-team{text-align:left}
+.match-card .vs{font-family:var(--mono);font-size:.6rem;color:var(--dim);text-align:center}
+.match-card .venue{font-family:var(--mono);font-size:.58rem;color:var(--dim);text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.match-card.picked{border-left:3px solid var(--green);background:rgba(46,125,50,.06)}
+.match-card.picked .home-team,.match-card.picked .away-team{color:var(--dim)}
+.match-card.picked .tag{font-family:var(--mono);font-size:.58rem;color:var(--green);text-transform:uppercase;letter-spacing:1px}
+
+/* Date tabs */
+.date-tab{
+  padding:10px 16px;font-family:var(--mono);font-size:.62rem;
+  text-transform:uppercase;letter-spacing:1px;color:var(--dim);
+  cursor:pointer;border-bottom:2px solid transparent;
+  white-space:nowrap;transition:color .15s,border-color .15s;
+}
+.date-tab:hover{color:var(--text)}
+.date-tab.active{color:var(--yellow);border-bottom-color:var(--yellow)}
+
+/* Prediction bar */
+.pred-bar{
+  position:sticky;bottom:0;z-index:50;
+  margin-top:16px;
+  border:1px solid var(--yellow-border);
+  background:var(--surface);
+}
+.pred-bar-inner{padding:14px 16px}
+.pred-bar-match{
+  font-family:var(--sans);font-size:.82rem;font-weight:700;
+  color:var(--bright);margin-bottom:10px;
+}
+.pred-bar-controls{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+
+/* Pick buttons */
+.pick-group{display:flex;gap:1px;background:var(--border)}
+.pick-btn{
+  padding:8px 16px;font-family:var(--mono);font-size:.65rem;
+  font-weight:700;text-transform:uppercase;letter-spacing:1px;
+  background:var(--bg);color:var(--dim);border:none;cursor:pointer;
+  transition:background .15s,color .15s;
+}
+.pick-btn:hover{color:var(--text);background:var(--surface2)}
+.pick-btn.active{color:var(--yellow);background:var(--yellow-bg);border:1px solid var(--yellow-border)}
+
 /* ── RESPONSIVE ── */
 @media(max-width:640px){
   .stats-row{grid-template-columns:1fr 1fr}
@@ -255,6 +313,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
   .health-grid{grid-template-columns:1fr}
   .nav-tab{padding:10px 12px;font-size:.62rem;letter-spacing:1px}
   .footer{flex-direction:column;gap:8px;text-align:center}
+  .match-card{grid-template-columns:50px 1fr 20px 1fr 50px;gap:6px;font-size:.72rem}
+  .match-card .vs,.match-card .group{display:none}
+  .pred-bar-controls{flex-direction:column;align-items:stretch}
 }
 </style>
 </head>
@@ -309,51 +370,43 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
   <!-- NEW PICK -->
   <div id="submit" class="panel">
     <div class="section-head">
-      <h2>Submit Prediction</h2>
+      <h2>Pick a Match</h2>
+      <span class="count" id="sched-count"></span>
     </div>
-    <form id="pred-form">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Your Name</label>
-          <input name="user" placeholder="e.g. F5" required>
-        </div>
-        <div class="form-group">
-          <label>Match ID</label>
-          <input name="matchId" placeholder="e.g. FRA-BRA" required>
-        </div>
-        <div class="form-group">
-          <label>Home Team</label>
-          <input name="home" placeholder="e.g. France" required>
-        </div>
-        <div class="form-group">
-          <label>Away Team</label>
-          <input name="away" placeholder="e.g. Brazil" required>
-        </div>
-        <div class="form-group">
-          <label>Pick</label>
-          <select name="pick" required>
-            <option value="">-- select --</option>
-            <option value="HOME">Home Win</option>
-            <option value="AWAY">Away Win</option>
-            <option value="DRAW">Draw</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Confidence</label>
-          <div class="slider-row">
-            <input type="range" id="confSlider" name="confidence" min="0" max="100" value="70">
+
+    <!-- User name -->
+    <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px">
+      <label style="font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);white-space:nowrap">Your Name</label>
+      <input id="pred-user" type="text" placeholder="e.g. F5" style="flex:1;max-width:200px;background:var(--bg);border:1px solid var(--border);padding:8px 10px;color:var(--yellow);font-family:var(--mono);font-size:.82rem;outline:none">
+    </div>
+
+    <!-- Date tabs -->
+    <div id="date-tabs" style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto"></div>
+
+    <!-- Match schedule grid -->
+    <div id="sched-grid" class="sched-grid"></div>
+
+    <!-- Prediction bar (hidden until match selected) -->
+    <div id="pred-bar" class="pred-bar" style="display:none">
+      <div class="pred-bar-inner">
+        <div class="pred-bar-match" id="pred-bar-match"></div>
+        <div class="pred-bar-controls">
+          <div class="pick-group">
+            <button class="pick-btn" data-pick="HOME" id="pb-home">HOME</button>
+            <button class="pick-btn" data-pick="DRAW" id="pb-draw">DRAW</button>
+            <button class="pick-btn" data-pick="AWAY" id="pb-away">AWAY</button>
+          </div>
+          <div class="slider-row" style="min-width:140px">
+            <input type="range" id="confSlider" min="0" max="100" value="70">
             <span class="slider-val" id="confVal">70%</span>
           </div>
-        </div>
-        <div class="form-group form-full">
-          <label>Hot Take (optional)</label>
-          <textarea name="take" rows="2" placeholder="your prediction reasoning..."></textarea>
-        </div>
-        <div class="form-group form-full">
-          <button type="submit" id="submitBtn" class="btn btn-primary">SUBMIT TO WALRUS</button>
+          <div style="flex:1">
+            <input id="pred-take" type="text" placeholder="hot take (optional)" style="width:100%;background:var(--bg);border:1px solid var(--border);padding:8px 10px;color:var(--text);font-family:var(--mono);font-size:.72rem;outline:none">
+          </div>
+          <button id="submitBtn" class="btn btn-primary" disabled>SUBMIT</button>
         </div>
       </div>
-    </form>
+    </div>
   </div>
 
   <!-- STATUS -->
@@ -373,6 +426,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 
 <div id="toasts"></div>
 
-<script src="/app.js?v=3"></script>
+<script src="/app.js?v=4"></script>
 </body>
 </html>
