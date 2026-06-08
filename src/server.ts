@@ -25,6 +25,31 @@ const PUBLIC = join(__dirname, "..", "public");
 const PORT = Number(process.env.PORT ?? 8787);
 const agent = PitchMind.fromEnv();
 
+/* ----- Feed cache: serve instantly, refresh off the critical path ----- */
+let feedCache: { scored: any[]; users: string[] } = { scored: [], users: [] };
+let feedCacheTs = 0;          // when the cache was last filled (ms)
+let feedRefreshing = false;   // single-flight guard
+const FEED_TTL = 30_000;      // consider cache stale after 30s
+
+async function refreshFeed(): Promise<void> {
+  if (feedRefreshing) return;
+  feedRefreshing = true;
+  try {
+    const data = await agent.feed();
+    feedCache = data;
+    feedCacheTs = Date.now();
+  } catch (e) {
+    console.error("feed refresh failed:", e instanceof Error ? e.message : e);
+  } finally {
+    feedRefreshing = false;
+  }
+}
+
+// Trigger a background refresh if the cache is stale (non-blocking).
+function maybeRefreshFeed(): void {
+  if (Date.now() - feedCacheTs > FEED_TTL) void refreshFeed();
+}
+
 function send(res: any, code: number, body: unknown, type = "application/json") {
   const data = type === "application/json" ? JSON.stringify(body) : (body as string);
   res.writeHead(code, { "Content-Type": type, "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Allow-Methods": "GET,POST,OPTIONS", "Cache-Control": "no-store" });
@@ -57,7 +82,14 @@ const server = createServer(async (req, res) => {
       return send(res, 200, await agent.recap(user));
     }
     if (req.method === "GET" && url.pathname === "/api/feed") {
-      return send(res, 200, await agent.feed());
+      // Force a blocking refresh only if we've never loaded the cache.
+      if (feedCacheTs === 0) {
+        if (url.searchParams.get("wait") === "1") await refreshFeed();
+        else void refreshFeed();
+      } else {
+        maybeRefreshFeed(); // warm cache exists -> refresh in background, serve now
+      }
+      return send(res, 200, { ...feedCache, cachedAt: feedCacheTs });
     }
     if (req.method === "POST" && url.pathname === "/api/predict") {
       const b = await readJson(req);
@@ -66,6 +98,9 @@ const server = createServer(async (req, res) => {
         pick: (b.pick as string).toUpperCase() as Outcome,
         confidence: Number(b.confidence ?? 50), take: b.take ?? "",
       });
+      // New pick landed — refresh the cached feed in the background so it
+      // shows up without the user waiting on a full Walrus recall.
+      void refreshFeed();
       return send(res, 200, out);
     }
     if (req.method === "POST" && url.pathname === "/api/result") {
@@ -91,4 +126,6 @@ const server = createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`PitchMind UI on http://localhost:${PORT}`);
   console.log(`memory namespace: ${process.env.MEMWAL_NAMESPACE ?? "pitchmind-wc2026"} (Walrus Mainnet)`);
+  // Pre-warm the feed cache so the first visitor gets an instant response.
+  void refreshFeed().then(() => console.log(`feed cache warmed: ${feedCache.scored.length} picks, ${feedCache.users.length} users`));
 });

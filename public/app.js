@@ -196,17 +196,22 @@
     const list = document.getElementById('feed-list');
     const count = document.getElementById('feed-count');
 
-    // Show loading indicator immediately
-    list.innerHTML = '<div class="loading" id="loading-msg" style="font-size:14px;line-height:1.3"><span id="loading-title">RECALLING FROM WALRUS...</span><br><span style="font-size:11px;color:var(--text-muted)">Querying onchain memory - may take 20-40s</span></div>';
-    count.textContent = '...';
+    // Defer the loading indicator: with the warm server-side cache the feed
+    // returns in ~10ms, so we only paint the "RECALLING FROM WALRUS" message
+    // if the fetch is genuinely slow (cold cache). Avoids a one-frame flash.
+    let loadTimer = null;
+    const spinnerDelay = setTimeout(() => {
+      list.innerHTML = '<div class="loading" id="loading-msg" style="font-size:14px;line-height:1.3"><span id="loading-title">RECALLING FROM WALRUS...</span><br><span style="font-size:11px;color:var(--text-muted)">Querying onchain memory - may take 20-40s</span></div>';
+      count.textContent = '...';
+      let dots = 0;
+      loadTimer = setInterval(() => {
+        dots = (dots + 1) % 4;
+        const el = document.getElementById('loading-title');
+        if (el) el.textContent = 'RECALLING FROM WALRUS' + '.'.repeat(dots);
+      }, 600);
+    }, 300);
 
-    // Animate dots on title only
-    let dots = 0;
-    const loadTimer = setInterval(() => {
-      dots = (dots + 1) % 4;
-      const el = document.getElementById('loading-title');
-      if (el) el.textContent = 'RECALLING FROM WALRUS' + '.'.repeat(dots);
-    }, 600);
+    const stopLoading = () => { clearTimeout(spinnerDelay); if (loadTimer) clearInterval(loadTimer); };
 
     try {
       const res = await fetch(API + '/api/feed');
@@ -214,15 +219,15 @@
       const data = await res.json();
 
       // Stale check — reloaded while we were loading
-      if (thisLoad !== feedLoadId) return;
+      if (thisLoad !== feedLoadId) { stopLoading(); return; }
 
-      clearInterval(loadTimer);
+      stopLoading();
       feedCache = data.scored || [];
       populateFindUsers(data.users || []);
       renderFeed();
     } catch (e) {
-      if (thisLoad !== feedLoadId) return; // stale
-      clearInterval(loadTimer);
+      if (thisLoad !== feedLoadId) { stopLoading(); return; } // stale
+      stopLoading();
       list.innerHTML = '<div class="empty"><span>FAILED TO LOAD: ' + escHtml(e.message) + '</span></div>';
     }
   }
