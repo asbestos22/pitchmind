@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PitchMind — it remembers your World Cup takes</title>
+<style>
+  :root { --bg:#0b0e14; --card:#141a26; --ink:#e6edf3; --mut:#8b98a9; --acc:#37e3a4; --warn:#ff6b6b; --line:#243043; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:28px 20px 12px; max-width:880px; margin:0 auto; }
+  h1 { margin:0; font-size:26px; letter-spacing:-0.5px; }
+  .sub { color:var(--mut); margin-top:6px; }
+  main { max-width:880px; margin:0 auto; padding:12px 20px 60px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin:14px 0; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  input, select { background:#0d1117; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:9px 10px; font-size:14px; }
+  input[type=text]{ min-width:120px; } .grow{ flex:1; min-width:160px; }
+  button { background:var(--acc); color:#04130c; border:0; border-radius:9px; padding:10px 16px; font-weight:700; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--acc); border:1px solid var(--acc); }
+  h2 { font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--mut); margin:0 0 10px; }
+  .roast { white-space:pre-wrap; font-size:16px; line-height:1.6; border-left:3px solid var(--acc); padding-left:14px; }
+  .stat { display:inline-block; margin-right:18px; } .stat b { font-size:22px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); }
+  .ok { color:var(--acc); } .no { color:var(--warn); } .pend{ color:var(--mut); }
+  .pill { font-size:11px; padding:2px 8px; border:1px solid var(--line); border-radius:99px; color:var(--mut); }
+  a { color:var(--acc); }
+  .err { color:var(--warn); font-size:13px; }
+  footer { color:var(--mut); font-size:12px; text-align:center; padding:20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🧠⚽ PitchMind</h1>
+  <div class="sub">An agent that remembers your FIFA World Cup 2026 picks — stored on <b>Walrus Mainnet</b> — and roasts your record with receipts. <span class="pill" id="net">memory: connecting…</span></div>
+</header>
+<main>
+  <div class="card">
+    <h2>Who are you</h2>
+    <div class="row">
+      <input id="user" type="text" placeholder="your handle (e.g. alex)" value="alex" />
+      <input id="day" type="number" min="1" value="1" title="tournament day" style="width:90px" />
+      <button id="loadBtn" class="ghost">Load my record</button>
+      <button id="roastBtn">Roast me</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Log a prediction</h2>
+    <div class="row">
+      <input id="p_match" type="text" placeholder="match id (WC-A1)" />
+      <input id="p_home" type="text" placeholder="home team" />
+      <input id="p_away" type="text" placeholder="away team" />
+      <select id="p_pick"><option value="HOME">HOME</option><option value="DRAW">DRAW</option><option value="AWAY">AWAY</option></select>
+      <input id="p_conf" type="number" min="0" max="100" value="70" style="width:90px" title="confidence %" />
+    </div>
+    <div class="row" style="margin-top:10px">
+      <input id="p_take" class="grow" type="text" placeholder='your hot take ("Brazil walks this, no contest")' />
+      <button id="predBtn">Save pick → Walrus</button>
+    </div>
+    <div id="predMsg" class="err"></div>
+  </div>
+
+  <div class="card">
+    <h2>Log a result (commissioner)</h2>
+    <div class="row">
+      <input id="r_match" type="text" placeholder="match id (WC-A1)" />
+      <input id="r_home" type="text" placeholder="home team" />
+      <input id="r_away" type="text" placeholder="away team" />
+      <input id="r_hs" type="number" min="0" value="0" style="width:70px" />
+      <input id="r_as" type="number" min="0" value="0" style="width:70px" />
+      <button id="resBtn" class="ghost">Save result → Walrus</button>
+    </div>
+    <div id="resMsg" class="err"></div>
+  </div>
+
+  <div class="card" id="roastCard" style="display:none">
+    <h2>The roast</h2>
+    <div class="roast" id="roastText"></div>
+    <div style="margin-top:10px;color:var(--mut);font-size:12px" id="roastMeta"></div>
+  </div>
+
+  <div class="card" id="recordCard" style="display:none">
+    <h2>Your record (recalled from Walrus)</h2>
+    <div id="stats" style="margin-bottom:12px"></div>
+    <table><thead><tr><th>Match</th><th>Pick</th><th>Conf</th><th>Result</th><th>Take</th></tr></thead>
+    <tbody id="rows"></tbody></table>
+  </div>
+</main>
+<footer>
+  PitchMind · Walrus Sessions 4 · all memory persisted to Walrus Mainnet · <a href="https://thewalrussessions.wal.app" target="_blank">event rules</a>
+</footer>
+<script src="/app.js"></script>
+</body>
+</html>
