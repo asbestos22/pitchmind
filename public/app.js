@@ -351,7 +351,7 @@
   });
 
   /* ==================== STATUS ==================== */
-  const STATUS_LOADING = '<div class="loading" style="font-size:14px;padding-top:60px;line-height:1.3">RECALLING FROM WALRUS...<br><span style="font-size:11px;color:var(--text-muted);animation:none">Querying onchain memory - may take 20-40s</span></div>';
+  const STATUS_LOADING = '<div class="loading" style="font-size:14px;padding-top:20px;line-height:1.3">RECALLING FROM WALRUS...<br><span style="font-size:11px;color:var(--text-muted);animation:none">Querying onchain memory - may take 20-40s</span></div>';
   let statusLoadId = 0;
   async function loadStatus() {
     const thisLoad = ++statusLoadId;
