@@ -351,9 +351,16 @@
   });
 
   /* ==================== STATUS ==================== */
+  const STATUS_LOADING = '<div class="loading" style="font-size:10px">RECALLING FROM WALRUS...<br><span style="font-size:9px;color:var(--text-muted);animation:none">querying on-chain memory — may take 20-40s</span></div>';
   let statusLoadId = 0;
   async function loadStatus() {
     const thisLoad = ++statusLoadId;
+    // Show loading state immediately
+    document.getElementById('stat-total').textContent = '...';
+    document.getElementById('stat-correct').textContent = '...';
+    document.getElementById('stat-accuracy').textContent = '...';
+    document.getElementById('stat-conf').textContent = '...';
+    document.getElementById('team-stats').innerHTML = STATUS_LOADING;
     try {
       const res = await fetch(API + '/api/recap?user=' + encodeURIComponent(statusUser));
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -381,7 +388,8 @@
           '</div></div>'
         ).join('');
     } catch (e) {
-      document.getElementById('stats-grid').innerHTML = '<div class="empty" style="grid-column:1/-1"><span>FAILED TO LOAD</span></div>';
+      if (thisLoad !== statusLoadId) return;
+      document.getElementById('team-stats').innerHTML = '<div class="empty"><span>FAILED TO LOAD: ' + escHtml(e.message) + '</span></div>';
     }
   }
 
