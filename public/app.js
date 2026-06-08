@@ -3,7 +3,23 @@
   'use strict';
 
   const API = '';
-  const USERS = ['F5', 'Aleko', 'Tita', 'Rex', 'Nina'];
+  const DEFAULT_USERS = ['F5', 'Aleko', 'Tita', 'Rex', 'Nina'];
+  // Custom users added via UI or by submitting a prediction, persisted locally.
+  function getCustomUsers() {
+    try { return JSON.parse(localStorage.getItem('pm_custom_users') || '[]'); }
+    catch { return []; }
+  }
+  function addCustomUser(name) {
+    name = (name || '').trim();
+    if (!name) return false;
+    const all = [...DEFAULT_USERS, ...getCustomUsers()];
+    if (all.some(u => u.toLowerCase() === name.toLowerCase())) return false; // dup
+    const custom = getCustomUsers();
+    custom.push(name);
+    localStorage.setItem('pm_custom_users', JSON.stringify(custom));
+    return true;
+  }
+  function allUsers() { return [...DEFAULT_USERS, ...getCustomUsers()]; }
 
   /* ==================== THREE.JS GOLD ICOSAHEDRON ==================== */
   function initLogo() {
@@ -71,22 +87,48 @@
     });
   });
 
-  /* ==================== USER SELECTORS ==================== */
-  function wireUserButtons(containerId, callback) {
-    const container = document.getElementById(containerId);
+  /* ==================== USER SELECTORS (dynamic) ==================== */
+  // Each selector tracks its own active user + reload callback.
+  const SELECTORS = [
+    { id: 'feed-users', getActive: () => feedUser, onPick: u => { feedUser = u; loadFeed(); } },
+    { id: 'roast-users', getActive: () => roastUser, onPick: u => { roastUser = u; } },
+    { id: 'status-users', getActive: () => statusUser, onPick: u => { statusUser = u; loadStatus(); } },
+  ];
+
+  function renderUserSelector(sel) {
+    const container = document.getElementById(sel.id);
     if (!container) return;
-    container.querySelectorAll('button').forEach(btn => {
+    const active = sel.getActive();
+    container.innerHTML = '';
+    allUsers().forEach(u => {
+      const btn = document.createElement('button');
+      btn.dataset.user = u;
+      btn.textContent = u.toUpperCase();
+      if (u === active) btn.classList.add('active');
       btn.addEventListener('click', () => {
         container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        callback(btn.dataset.user);
+        sel.onPick(u);
       });
+      container.appendChild(btn);
     });
+    // + ADD button
+    const add = document.createElement('button');
+    add.textContent = '+ ADD';
+    add.style.cssText = 'border-style:dashed;opacity:0.7';
+    add.title = 'Add a new user';
+    add.addEventListener('click', () => {
+      const name = prompt('New user name:');
+      if (!name) return;
+      if (!addCustomUser(name)) { alert('User already exists or invalid name.'); return; }
+      // Re-render all selectors so the new chip appears everywhere.
+      SELECTORS.forEach(renderUserSelector);
+    });
+    container.appendChild(add);
   }
 
-  wireUserButtons('feed-users', u => { feedUser = u; loadFeed(); });
-  wireUserButtons('roast-users', u => { roastUser = u; });
-  wireUserButtons('status-users', u => { statusUser = u; loadStatus(); });
+  function renderAllSelectors() { SELECTORS.forEach(renderUserSelector); }
+  renderAllSelectors();
 
   /* ==================== FEED ==================== */
   let feedLoadId = 0; // monotonic counter — discard stale responses
@@ -316,6 +358,8 @@
     const btn = document.getElementById('submit-pick');
     const user = localStorage.getItem('pm_user') || prompt('Your username:') || 'anon';
     localStorage.setItem('pm_user', user);
+    // Register new user as a chip so their picks are browsable in Feed/Roast/Status.
+    if (addCustomUser(user)) renderAllSelectors();
     btn.disabled = true;
     btn.textContent = 'SUBMITTING...';
     try {
