@@ -114,7 +114,7 @@
     const loadTimer = setInterval(() => {
       dots = (dots + 1) % 4;
       const el = document.getElementById('loading-msg');
-      if (el) el.innerHTML = 'RECALLING FROM WALRUS' + '.'.repeat(dots) + '<br><span style="font-size:11px;color:var(--text-muted);margin-top:6px;display:block">querying on-chain memory — may take 20-40s</span>';
+      if (el) el.innerHTML = 'RECALLING FROM WALRUS' + '.'.repeat(dots) + '<br><span style="font-size:11px;color:var(--text-muted);margin-top:6px;display:block">Querying onchain memory<br>may take 20-40s</span>';
     }, 600);
 
     try {
@@ -351,7 +351,7 @@
   });
 
   /* ==================== STATUS ==================== */
-  const STATUS_LOADING = '<div class="loading" style="font-size:14px;padding-top:60px">RECALLING FROM WALRUS...<br><span style="font-size:11px;color:var(--text-muted);animation:none">querying on-chain memory — may take 20-40s</span></div>';
+  const STATUS_LOADING = '<div class="loading" style="font-size:14px;padding-top:60px;line-height:1.8">RECALLING FROM WALRUS...<br><span style="font-size:11px;color:var(--text-muted);animation:none">Querying onchain memory<br>may take 20-40s</span></div>';
   let statusLoadId = 0;
   async function loadStatus() {
     const thisLoad = ++statusLoadId;
