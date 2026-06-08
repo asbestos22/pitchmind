@@ -356,10 +356,10 @@
   async function loadStatus() {
     const thisLoad = ++statusLoadId;
     // Show loading state immediately
-    document.getElementById('stat-total').textContent = '...';
-    document.getElementById('stat-correct').textContent = '...';
-    document.getElementById('stat-accuracy').textContent = '...';
-    document.getElementById('stat-conf').textContent = '...';
+    document.getElementById('stat-total').innerHTML = '<span style="font-size:12px;font-weight:600">...</span>';
+    document.getElementById('stat-correct').innerHTML = '<span style="font-size:12px;font-weight:600">...</span>';
+    document.getElementById('stat-accuracy').innerHTML = '<span style="font-size:12px;font-weight:600">...</span>';
+    document.getElementById('stat-conf').innerHTML = '<span style="font-size:12px;font-weight:600">...</span>';
     document.getElementById('team-stats').innerHTML = STATUS_LOADING;
     try {
       const res = await fetch(API + '/api/recap?user=' + encodeURIComponent(statusUser));
