@@ -171,9 +171,11 @@
       const correctLabel = p.correct === true ? '✓' : p.correct === false ? '✗' : '';
       const ts = p.ts ? new Date(p.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
       const take = p.take ? '<div class="card-take">"' + escHtml(p.take) + '"</div>' : '';
+      // Show the actual picked team name on the badge instead of HOME/AWAY jargon.
+      const pickLabel = p.pick === 'HOME' ? p.home : p.pick === 'AWAY' ? p.away : 'DRAW';
       return '<div class="card">' +
         '<div class="card-header"><span class="teams">' + escHtml(p.home) + ' vs ' + escHtml(p.away) + '</span>' +
-        '<span class="pick ' + p.pick + '">' + p.pick + '</span></div>' +
+        '<span class="pick ' + p.pick + '" title="' + escHtml(p.pick) + '">' + escHtml(pickLabel) + '</span></div>' +
         '<div class="card-meta"><span class="feed-user">' + escHtml((p.user || '').toUpperCase()) + '</span>' +
         '<span class="conf">' + p.confidence + '% CONF</span>' +
         '<span>' + ts + '</span>' +
