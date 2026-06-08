@@ -356,16 +356,19 @@
   async function loadStatus() {
     const thisLoad = ++statusLoadId;
     // Show loading state immediately
-    document.getElementById('stat-total').innerHTML = '<span style="font-size:12px;font-weight:600">...</span>';
-    document.getElementById('stat-correct').innerHTML = '<span style="font-size:12px;font-weight:600">...</span>';
-    document.getElementById('stat-accuracy').innerHTML = '<span style="font-size:12px;font-weight:600">...</span>';
-    document.getElementById('stat-conf').innerHTML = '<span style="font-size:12px;font-weight:600">...</span>';
-    document.getElementById('team-stats').innerHTML = STATUS_LOADING;
+    const loadEl = document.getElementById('status-loading');
+    if (loadEl) loadEl.style.display = '';
+    document.getElementById('stat-total').textContent = '...';
+    document.getElementById('stat-correct').textContent = '...';
+    document.getElementById('stat-accuracy').textContent = '...';
+    document.getElementById('stat-conf').textContent = '...';
+    document.getElementById('team-stats').innerHTML = '';
     try {
       const res = await fetch(API + '/api/recap?user=' + encodeURIComponent(statusUser));
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       if (thisLoad !== statusLoadId) return; // stale
+      if (loadEl) loadEl.style.display = 'none';
       const r = data.record || {};
       document.getElementById('stat-total').textContent = r.total || 0;
       document.getElementById('stat-correct').textContent = r.correct || 0;
@@ -389,6 +392,7 @@
         ).join('');
     } catch (e) {
       if (thisLoad !== statusLoadId) return;
+      if (loadEl) loadEl.style.display = 'none';
       document.getElementById('team-stats').innerHTML = '<div class="empty"><span>FAILED TO LOAD: ' + escHtml(e.message) + '</span></div>';
     }
   }
