@@ -106,7 +106,7 @@
     const count = document.getElementById('feed-count');
 
     // Show loading indicator immediately
-    list.innerHTML = '<div class="loading" id="loading-msg" style="font-size:14px;line-height:1.8"><span id="loading-title">RECALLING FROM WALRUS...</span><br><span style="font-size:11px;color:var(--text-muted)">Querying onchain memory - may take 20-40s</span></div>';
+    list.innerHTML = '<div class="loading" id="loading-msg" style="font-size:14px;line-height:1.3"><span id="loading-title">RECALLING FROM WALRUS...</span><br><span style="font-size:11px;color:var(--text-muted)">Querying onchain memory - may take 20-40s</span></div>';
     count.textContent = '...';
 
     // Animate dots on title only
@@ -351,7 +351,7 @@
   });
 
   /* ==================== STATUS ==================== */
-  const STATUS_LOADING = '<div class="loading" style="font-size:14px;padding-top:60px;line-height:1.8">RECALLING FROM WALRUS...<br><span style="font-size:11px;color:var(--text-muted);animation:none">Querying onchain memory - may take 20-40s</span></div>';
+  const STATUS_LOADING = '<div class="loading" style="font-size:14px;padding-top:60px;line-height:1.3">RECALLING FROM WALRUS...<br><span style="font-size:11px;color:var(--text-muted);animation:none">Querying onchain memory - may take 20-40s</span></div>';
   let statusLoadId = 0;
   async function loadStatus() {
     const thisLoad = ++statusLoadId;
