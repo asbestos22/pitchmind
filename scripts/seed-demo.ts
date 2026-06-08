@@ -196,7 +196,7 @@ function pickMatches(user: typeof USERS[0]): typeof MATCHES {
   return shuffled.slice(0, count).sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
 }
 
-async function predict(user: string, match: typeof MATCHES[0], pick: string, confidence: number, take: string): Promise<boolean> {
+async function predict(user: string, match: typeof MATCHES[0], pick: string, confidence: number, take: string, attempt = 1): Promise<boolean> {
   const body = {
     user,
     matchId: match.matchId,
@@ -215,6 +215,14 @@ async function predict(user: string, match: typeof MATCHES[0], pick: string, con
     });
     const data = await r.json();
     if (data.error) {
+      if (data.error.includes("429") || data.error.includes("Rate limit") || data.error.includes("retry_after")) {
+        if (attempt < 4) {
+          const wait = 65 * attempt;
+          console.log(`  ⏳ ${user}: ${match.matchId} — rate limited, waiting ${wait}s (attempt ${attempt}/3)...`);
+          await new Promise(r => setTimeout(r, wait * 1000));
+          return predict(user, match, pick, confidence, take, attempt + 1);
+        }
+      }
       console.error(`  ✗ ${user}: ${match.matchId} — ${data.error}`);
       return false;
     }
@@ -269,8 +277,8 @@ async function main() {
       const ok = await predict(user.name, match, win, conf, take);
       if (ok) total++;
 
-      // Small delay to avoid rate limits
-      await new Promise(r => setTimeout(r, 300));
+      // Delay 2.5s between requests (30 req/min limit)
+      await new Promise(r => setTimeout(r, 2500));
     }
   }
 
