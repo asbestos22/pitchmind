@@ -71,7 +71,7 @@ export class WalrusMemory {
   /** Semantic recall from Walrus. Lower distance = closer match. Retries on transient aborts. */
   async recall(query: string, limit = 20): Promise<RecallHit[]> {
     let lastErr: unknown;
-    for (let attempt = 0; attempt < 5; attempt++) {
+    for (let attempt = 0; attempt < 8; attempt++) {
       try {
         const res = await this.client.recall({ query, limit, namespace: this.namespace });
         return res.results ?? [];
@@ -80,7 +80,7 @@ export class WalrusMemory {
         const msg = e instanceof Error ? e.message : String(e);
         // Relayer occasionally aborts heavy recalls — back off and retry.
         if (msg.includes("aborted") || msg.includes("timed out") || msg.includes("429")) {
-          await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
+          await new Promise((r) => setTimeout(r, 4000 * (attempt + 1)));
           continue;
         }
         throw e;
