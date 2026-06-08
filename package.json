@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@mysten-incubation/memwal": "^0.0.7",
+    "@mysten/sui": "^1.45.2",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
