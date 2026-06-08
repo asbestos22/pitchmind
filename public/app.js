@@ -89,6 +89,8 @@
   wireUserButtons('status-users', u => { statusUser = u; loadStatus(); });
 
   /* ==================== FEED ==================== */
+  let feedLoadId = 0; // monotonic counter — discard stale responses
+
   document.querySelectorAll('.filter-bar button[data-filter]').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.filter-bar button[data-filter]').forEach(b => b.classList.remove('active'));
@@ -99,23 +101,36 @@
   });
 
   async function loadFeed() {
+    const thisLoad = ++feedLoadId; // capture current load id
     const list = document.getElementById('feed-list');
     const count = document.getElementById('feed-count');
+
+    // Show loading indicator immediately
+    list.innerHTML = '<div class="loading" id="loading-msg">RECALLING FROM WALRUS...</div>';
+    count.textContent = '...';
+
+    // Animate dots
     let dots = 0;
     const loadTimer = setInterval(() => {
       dots = (dots + 1) % 4;
-      list.innerHTML = '<div class="loading">RECALLING FROM WALRUS' + '.'.repeat(dots) + '<br><span style="font-size:8px;color:var(--text-muted);margin-top:4px;display:block">querying on-chain memory — may take 20-40s</span></div>';
-    }, 800);
+      const el = document.getElementById('loading-msg');
+      if (el) el.innerHTML = 'RECALLING FROM WALRUS' + '.'.repeat(dots) + '<br><span style="font-size:8px;color:var(--text-muted);margin-top:6px;display:block">querying on-chain memory — may take 20-40s</span>';
+    }, 600);
+
     try {
       const res = await fetch(API + '/api/recap?user=' + encodeURIComponent(feedUser));
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
+
+      // Stale check — user switched while we were loading
+      if (thisLoad !== feedLoadId) return;
+
+      clearInterval(loadTimer);
       let picks = data.scored || [];
       if (feedFilter === 'recent') {
         picks = [...picks].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
       }
       count.textContent = picks.length + ' PICKS';
-      clearInterval(loadTimer);
       if (picks.length === 0) {
         list.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg><span>NO PREDICTIONS YET</span></div>';
         return;
@@ -134,6 +149,7 @@
           '</div>' + take + '</div>';
       }).join('');
     } catch (e) {
+      if (thisLoad !== feedLoadId) return; // stale
       clearInterval(loadTimer);
       list.innerHTML = '<div class="empty"><span>FAILED TO LOAD: ' + escHtml(e.message) + '</span></div>';
     }
@@ -335,11 +351,14 @@
   });
 
   /* ==================== STATUS ==================== */
+  let statusLoadId = 0;
   async function loadStatus() {
+    const thisLoad = ++statusLoadId;
     try {
       const res = await fetch(API + '/api/recap?user=' + encodeURIComponent(statusUser));
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
+      if (thisLoad !== statusLoadId) return; // stale
       const r = data.record || {};
       document.getElementById('stat-total').textContent = r.total || 0;
       document.getElementById('stat-correct').textContent = r.correct || 0;
