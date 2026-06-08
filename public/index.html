@@ -391,11 +391,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       <div class="pred-bar-inner">
         <div class="pred-bar-match" id="pred-bar-match"></div>
         <div class="pred-bar-controls">
-          <div class="pick-group">
-            <button class="pick-btn" data-pick="HOME" id="pb-home">HOME</button>
-            <button class="pick-btn" data-pick="DRAW" id="pb-draw">DRAW</button>
-            <button class="pick-btn" data-pick="AWAY" id="pb-away">AWAY</button>
-          </div>
+          <div class="pick-group" id="pick-group"></div>
           <div class="slider-row" style="min-width:140px">
             <input type="range" id="confSlider" min="0" max="100" value="70">
             <span class="slider-val" id="confVal">70%</span>
@@ -426,6 +422,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 
 <div id="toasts"></div>
 
-<script src="/app.js?v=4"></script>
+<script src="/app.js?v=5"></script>
 </body>
 </html>

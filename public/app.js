@@ -182,8 +182,25 @@ function selectMatch(m) {
   if (bar) bar.style.display = 'block';
   if (barMatch) barMatch.textContent = m.home + ' vs ' + m.away + '  ·  ' + m.date + ' ' + m.time + '  ·  ' + m.group;
 
-  // Reset pick buttons
-  $$('.pick-btn').forEach(b => b.classList.remove('active'));
+  // Build pick buttons with team names
+  const pg = $('#pick-group');
+  if (pg) {
+    pg.innerHTML =
+      '<button class="pick-btn" data-pick="HOME">' + m.home.toUpperCase() + '</button>' +
+      '<button class="pick-btn" data-pick="DRAW">DRAW</button>' +
+      '<button class="pick-btn" data-pick="AWAY">' + m.away.toUpperCase() + '</button>';
+    // Attach listeners to new buttons
+    pg.querySelectorAll('.pick-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        pg.querySelectorAll('.pick-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedPick = btn.getAttribute('data-pick');
+        const submitBtn = $('#submitBtn');
+        if (submitBtn) submitBtn.disabled = false;
+      });
+    });
+  }
+
   const submitBtn = $('#submitBtn');
   if (submitBtn) submitBtn.disabled = true;
 
@@ -193,16 +210,6 @@ function selectMatch(m) {
 
 // ── Pick Buttons ──
 document.addEventListener('DOMContentLoaded', () => {
-  $$('.pick-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      $$('.pick-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      selectedPick = btn.getAttribute('data-pick');
-      const submitBtn = $('#submitBtn');
-      if (submitBtn) submitBtn.disabled = false;
-    });
-  });
-
   // Confidence slider
   const slider = $('#confSlider');
   const sliderVal = $('#confVal');
@@ -268,6 +275,8 @@ async function doSubmit() {
     const confVal = $('#confVal');
     if (confVal) confVal.textContent = '70%';
     $$('.pick-btn').forEach(b => b.classList.remove('active'));
+    const pg = $('#pick-group');
+    if (pg) pg.innerHTML = '';
     $('#pred-bar').style.display = 'none';
 
     // Re-render to show "picked" tag
