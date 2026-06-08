@@ -1,96 +1,378 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PitchMind — it remembers your World Cup takes</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PitchMind</title>
+<link rel="icon" type="image/png" href="data:image/png;base64,">
 <style>
-  :root { --bg:#0b0e14; --card:#141a26; --ink:#e6edf3; --mut:#8b98a9; --acc:#37e3a4; --warn:#ff6b6b; --line:#243043; }
-  * { box-sizing:border-box; }
-  body { margin:0; font:15px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); }
-  header { padding:28px 20px 12px; max-width:880px; margin:0 auto; }
-  h1 { margin:0; font-size:26px; letter-spacing:-0.5px; }
-  .sub { color:var(--mut); margin-top:6px; }
-  main { max-width:880px; margin:0 auto; padding:12px 20px 60px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin:14px 0; }
-  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-  input, select { background:#0d1117; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:9px 10px; font-size:14px; }
-  input[type=text]{ min-width:120px; } .grow{ flex:1; min-width:160px; }
-  button { background:var(--acc); color:#04130c; border:0; border-radius:9px; padding:10px 16px; font-weight:700; cursor:pointer; }
-  button.ghost { background:transparent; color:var(--acc); border:1px solid var(--acc); }
-  h2 { font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--mut); margin:0 0 10px; }
-  .roast { white-space:pre-wrap; font-size:16px; line-height:1.6; border-left:3px solid var(--acc); padding-left:14px; }
-  .stat { display:inline-block; margin-right:18px; } .stat b { font-size:22px; }
-  table { width:100%; border-collapse:collapse; font-size:13px; }
-  th,td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); }
-  .ok { color:var(--acc); } .no { color:var(--warn); } .pend{ color:var(--mut); }
-  .pill { font-size:11px; padding:2px 8px; border:1px solid var(--line); border-radius:99px; color:var(--mut); }
-  a { color:var(--acc); }
-  .err { color:var(--warn); font-size:13px; }
-  footer { color:var(--mut); font-size:12px; text-align:center; padding:20px; }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#0a0a0a;
+  --surface:#111111;
+  --surface2:#181818;
+  --border:#252525;
+  --text:#d4d4d4;
+  --dim:#666;
+  --bright:#fff;
+  --yellow:#FFD000;
+  --yellow-dim:#B89500;
+  --yellow-bg:rgba(255,208,0,.08);
+  --yellow-border:rgba(255,208,0,.25);
+  --red:#D32F2F;
+  --green:#2E7D32;
+  --mono:'SF Mono','Fira Code','Cascadia Code',Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;
+}
+
+html{font-size:15px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+
+/* ── NAV ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:52px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+}
+.topbar .brand{
+  display:flex;align-items:center;gap:10px;
+}
+.topbar .brand img{
+  width:28px;height:28px;
+}
+.topbar .brand-text{
+  font-family:var(--mono);font-size:.75rem;font-weight:700;
+  color:var(--yellow);text-transform:uppercase;letter-spacing:3px;
+}
+.topbar .meta{
+  font-family:var(--mono);font-size:.6rem;color:var(--dim);
+  letter-spacing:1px;
+}
+
+/* ── TABS ── */
+.nav-tabs{
+  display:flex;gap:0;border-bottom:1px solid var(--border);
+  background:var(--surface);padding:0 24px;
+}
+.nav-tab{
+  padding:12px 20px;font-family:var(--mono);font-size:.7rem;
+  text-transform:uppercase;letter-spacing:2px;color:var(--dim);
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:color .15s,border-color .15s;
+}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--yellow);border-bottom-color:var(--yellow)}
+
+/* ── MAIN ── */
+.main{max-width:920px;margin:0 auto;padding:24px}
+.panel{display:none}.panel.active{display:block}
+
+/* ── SECTION HEADERS ── */
+.section-head{
+  display:flex;align-items:baseline;gap:12px;
+  margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);
+}
+.section-head h2{
+  font-family:var(--mono);font-size:.78rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:2px;color:var(--yellow);
+}
+.section-head .count{
+  font-family:var(--mono);font-size:.62rem;color:var(--dim);
+}
+
+/* ── STATS ROW ── */
+.stats-row{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--border);border:1px solid var(--border);margin-bottom:24px;
+}
+.stat-cell{
+  background:var(--surface);padding:14px 16px;text-align:center;
+}
+.stat-cell .label{font-family:var(--mono);font-size:.58rem;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
+.stat-cell .value{font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--bright)}
+.stat-cell .value.yellow{color:var(--yellow)}
+.stat-cell .value.green{color:var(--green)}
+.stat-cell .value.red{color:var(--red)}
+
+/* ── PREDICTION FEED ── */
+.pred-feed{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border)}
+.pred-row{
+  display:grid;grid-template-columns:1fr auto auto auto;
+  align-items:center;gap:16px;
+  padding:14px 16px;background:var(--surface);
+  font-family:var(--mono);font-size:.76rem;
+  transition:background .15s;
+}
+.pred-row:hover{background:var(--surface2)}
+.pred-row .match{color:var(--bright);font-weight:600}
+.pred-row .vs{color:var(--dim);font-weight:400}
+.pred-row .pick{
+  font-size:.62rem;font-weight:700;text-transform:uppercase;
+  padding:3px 10px;letter-spacing:1px;
+}
+.pred-row .pick.HOME{background:rgba(46,125,50,.15);color:var(--green)}
+.pred-row .pick.AWAY{background:rgba(211,47,47,.15);color:var(--red)}
+.pred-row .pick.DRAW{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-border)}
+.pred-row .conf{color:var(--dim);font-size:.68rem;min-width:36px;text-align:right}
+.pred-row .status{font-size:.68rem;min-width:20px;text-align:center}
+
+/* ── ROAST ── */
+.roast-area{
+  background:var(--surface);border:1px solid var(--border);
+  padding:32px 24px;min-height:200px;
+}
+.roast-area .label{
+  font-family:var(--mono);font-size:.62rem;font-weight:700;
+  color:var(--yellow);text-transform:uppercase;letter-spacing:3px;
+  margin-bottom:16px;
+}
+.roast-text{
+  font-family:var(--sans);font-size:1.05rem;line-height:1.8;
+  color:var(--text);
+}
+.roast-text .word{opacity:0;transition:opacity .2s}
+.roast-text .word.visible{opacity:1}
+.roast-cursor{
+  display:inline-block;width:2px;height:1em;background:var(--yellow);
+  animation:blink-cursor .6s step-end infinite;vertical-align:text-bottom;
+  margin-left:2px;
+}
+@keyframes blink-cursor{50%{opacity:0}}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-full{grid-column:1/-1}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{
+  font-family:var(--mono);font-size:.58rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);
+}
+.form-group input,.form-group select,.form-group textarea{
+  background:var(--bg);border:1px solid var(--border);
+  padding:10px 12px;color:var(--text);font-family:var(--mono);
+  font-size:.82rem;outline:none;transition:border-color .15s;
+  -webkit-appearance:none;border-radius:0;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  border-color:var(--yellow);
+}
+.form-group textarea{resize:vertical;min-height:64px;font-family:var(--sans)}
+.form-group select{cursor:pointer}
+
+/* Range slider */
+.slider-row{display:flex;align-items:center;gap:12px}
+.slider-row input[type=range]{
+  flex:1;-webkit-appearance:none;appearance:none;
+  height:3px;background:var(--border);outline:none;
+}
+.slider-row input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;
+  background:var(--yellow);cursor:pointer;border-radius:0;
+}
+.slider-val{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--yellow);min-width:44px}
+
+/* Buttons */
+.btn{
+  font-family:var(--mono);font-size:.7rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:2px;
+  padding:12px 24px;border:none;cursor:pointer;
+  transition:background .15s,opacity .15s;
+  border-radius:0;
+}
+.btn-primary{background:var(--yellow);color:#000}
+.btn-primary:hover{opacity:.85}
+.btn-primary:disabled{opacity:.3;cursor:not-allowed}
+.btn-outline{
+  background:transparent;color:var(--yellow);
+  border:1px solid var(--yellow-border);
+}
+.btn-outline:hover{background:var(--yellow-bg)}
+.btn-outline:disabled{opacity:.3;cursor:not-allowed}
+
+/* ── HEALTH ── */
+.health-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)}
+.health-cell{background:var(--surface);padding:14px 16px}
+.health-cell .k{font-family:var(--mono);font-size:.58rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.health-cell .v{font-family:var(--mono);font-size:.8rem;color:var(--bright);word-break:break-all}
+.health-cell .v.ok{color:var(--green)}
+
+/* ── TOAST ── */
+#toasts{position:fixed;top:60px;right:16px;z-index:200;display:flex;flex-direction:column;gap:6px}
+.toast{
+  font-family:var(--mono);font-size:.7rem;padding:10px 16px;
+  animation:slide-in .25s ease;
+}
+.toast.success{background:rgba(46,125,50,.12);color:var(--green);border-left:3px solid var(--green)}
+.toast.error{background:rgba(211,47,47,.12);color:var(--red);border-left:3px solid var(--red)}
+.toast.info{background:var(--yellow-bg);color:var(--yellow);border-left:3px solid var(--yellow)}
+@keyframes slide-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── LOADING ── */
+.loading{padding:40px;text-align:center;font-family:var(--mono);font-size:.72rem;color:var(--dim)}
+.loading::after{content:'...';animation:dots 1.5s steps(4,end) infinite}
+@keyframes dots{0%{content:'.'}33%{content:'..'}66%{content:'...'}}
+
+/* ── EMPTY ── */
+.empty-state{
+  padding:48px 24px;text-align:center;
+  font-family:var(--mono);font-size:.76rem;color:var(--dim);
+}
+.empty-state strong{color:var(--yellow)}
+
+/* ── RAW DATA ── */
+.raw-toggle{
+  font-family:var(--mono);font-size:.62rem;color:var(--dim);
+  cursor:pointer;margin-top:16px;
+}
+.raw-toggle:hover{color:var(--text)}
+.raw-data{
+  display:none;margin-top:8px;padding:12px;
+  background:var(--bg);border:1px solid var(--border);
+  font-family:var(--mono);font-size:.68rem;color:var(--dim);
+  white-space:pre-wrap;word-break:break-all;
+  max-height:200px;overflow:auto;line-height:1.6;
+}
+.raw-data.open{display:block}
+
+/* ── FOOTER ── */
+.footer{
+  margin-top:48px;padding:16px 24px;border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:var(--mono);font-size:.58rem;color:var(--dim);
+}
+.footer .walrus{
+  display:flex;align-items:center;gap:6px;
+  color:var(--yellow-dim);
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .stats-row{grid-template-columns:1fr 1fr}
+  .pred-row{grid-template-columns:1fr;gap:8px}
+  .form-grid{grid-template-columns:1fr}
+  .health-grid{grid-template-columns:1fr}
+  .nav-tab{padding:10px 12px;font-size:.62rem;letter-spacing:1px}
+  .footer{flex-direction:column;gap:8px;text-align:center}
+}
 </style>
 </head>
 <body>
-<header>
-  <h1>🧠⚽ PitchMind</h1>
-  <div class="sub">An agent that remembers your FIFA World Cup 2026 picks — stored on <b>Walrus Mainnet</b> — and roasts your record with receipts. <span class="pill" id="net">memory: connecting…</span></div>
-</header>
-<main>
-  <div class="card">
-    <h2>Who are you</h2>
-    <div class="row">
-      <input id="user" type="text" placeholder="your handle (e.g. alex)" value="alex" />
-      <input id="day" type="number" min="1" value="1" title="tournament day" style="width:90px" />
-      <button id="loadBtn" class="ghost">Load my record</button>
-      <button id="roastBtn">Roast me</button>
+
+<div class="topbar">
+  <div class="brand">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23FFD000'/%3E%3Ccircle cx='32' cy='32' r='12' fill='%230A0A0A'/%3E%3Ccircle cx='32' cy='20' r='4' fill='%230A0A0A'/%3E%3Ccircle cx='22' cy='32' r='4' fill='%230A0A0A'/%3E%3Ccircle cx='42' cy='32' r='4' fill='%230A0A0A'/%3E%3C/svg%3E" alt="PM">
+    <span class="brand-text">PitchMind</span>
+  </div>
+  <span class="meta">WC2026 // WALRUS MEMORY</span>
+</div>
+
+<div class="nav-tabs">
+  <div class="nav-tab active" data-panel="predictions">Feed</div>
+  <div class="nav-tab" data-panel="roast">Roast</div>
+  <div class="nav-tab" data-panel="submit">New Pick</div>
+  <div class="nav-tab" data-panel="health">Status</div>
+</div>
+
+<div class="main">
+
+  <!-- FEED -->
+  <div id="predictions" class="panel active">
+    <div class="section-head">
+      <h2>Prediction Feed</h2>
+      <span class="count" id="pred-count"></span>
+    </div>
+    <div id="pred-stats"></div>
+    <div id="pred-list"><div class="loading">loading predictions</div></div>
+  </div>
+
+  <!-- ROAST -->
+  <div id="roast" class="panel">
+    <div class="section-head">
+      <h2>Roast Generator</h2>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:20px">
+      <input id="roast-user" type="text" placeholder="username" style="flex:1;background:var(--bg);border:1px solid var(--border);padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:.82rem;outline:none;border-radius:0">
+      <button id="roastBtn" class="btn btn-outline" onclick="doRoast()">ROAST</button>
+    </div>
+    <div id="roast-output" class="roast-area">
+      <div class="label">output</div>
+      <div class="roast-text" style="color:var(--dim);font-style:italic">enter a username and hit roast</div>
+    </div>
+    <div id="roast-raw" style="display:none">
+      <div class="raw-toggle" onclick="this.nextElementSibling.classList.toggle('open')">[ toggle raw json ]</div>
+      <div class="raw-data" id="roast-raw-data"></div>
     </div>
   </div>
 
-  <div class="card">
-    <h2>Log a prediction</h2>
-    <div class="row">
-      <input id="p_match" type="text" placeholder="match id (WC-A1)" />
-      <input id="p_home" type="text" placeholder="home team" />
-      <input id="p_away" type="text" placeholder="away team" />
-      <select id="p_pick"><option value="HOME">HOME</option><option value="DRAW">DRAW</option><option value="AWAY">AWAY</option></select>
-      <input id="p_conf" type="number" min="0" max="100" value="70" style="width:90px" title="confidence %" />
+  <!-- NEW PICK -->
+  <div id="submit" class="panel">
+    <div class="section-head">
+      <h2>Submit Prediction</h2>
     </div>
-    <div class="row" style="margin-top:10px">
-      <input id="p_take" class="grow" type="text" placeholder='your hot take ("Brazil walks this, no contest")' />
-      <button id="predBtn">Save pick → Walrus</button>
-    </div>
-    <div id="predMsg" class="err"></div>
+    <form id="pred-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Your Name</label>
+          <input name="user" placeholder="e.g. F5" required>
+        </div>
+        <div class="form-group">
+          <label>Match ID</label>
+          <input name="matchId" placeholder="e.g. FRA-BRA" required>
+        </div>
+        <div class="form-group">
+          <label>Home Team</label>
+          <input name="home" placeholder="e.g. France" required>
+        </div>
+        <div class="form-group">
+          <label>Away Team</label>
+          <input name="away" placeholder="e.g. Brazil" required>
+        </div>
+        <div class="form-group">
+          <label>Pick</label>
+          <select name="pick" required>
+            <option value="">-- select --</option>
+            <option value="HOME">Home Win</option>
+            <option value="AWAY">Away Win</option>
+            <option value="DRAW">Draw</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Confidence</label>
+          <div class="slider-row">
+            <input type="range" id="confSlider" name="confidence" min="0" max="100" value="70">
+            <span class="slider-val" id="confVal">70%</span>
+          </div>
+        </div>
+        <div class="form-group form-full">
+          <label>Hot Take (optional)</label>
+          <textarea name="take" rows="2" placeholder="your prediction reasoning..."></textarea>
+        </div>
+        <div class="form-group form-full">
+          <button type="submit" id="submitBtn" class="btn btn-primary">SUBMIT TO WALRUS</button>
+        </div>
+      </div>
+    </form>
   </div>
 
-  <div class="card">
-    <h2>Log a result (commissioner)</h2>
-    <div class="row">
-      <input id="r_match" type="text" placeholder="match id (WC-A1)" />
-      <input id="r_home" type="text" placeholder="home team" />
-      <input id="r_away" type="text" placeholder="away team" />
-      <input id="r_hs" type="number" min="0" value="0" style="width:70px" />
-      <input id="r_as" type="number" min="0" value="0" style="width:70px" />
-      <button id="resBtn" class="ghost">Save result → Walrus</button>
+  <!-- STATUS -->
+  <div id="health" class="panel">
+    <div class="section-head">
+      <h2>Service Status</h2>
     </div>
-    <div id="resMsg" class="err"></div>
+    <div id="health-content"><div class="loading">pinging relay</div></div>
   </div>
 
-  <div class="card" id="roastCard" style="display:none">
-    <h2>The roast</h2>
-    <div class="roast" id="roastText"></div>
-    <div style="margin-top:10px;color:var(--mut);font-size:12px" id="roastMeta"></div>
-  </div>
+</div>
 
-  <div class="card" id="recordCard" style="display:none">
-    <h2>Your record (recalled from Walrus)</h2>
-    <div id="stats" style="margin-bottom:12px"></div>
-    <table><thead><tr><th>Match</th><th>Pick</th><th>Conf</th><th>Result</th><th>Take</th></tr></thead>
-    <tbody id="rows"></tbody></table>
-  </div>
-</main>
-<footer>
-  PitchMind · Walrus Sessions 4 · all memory persisted to Walrus Mainnet · <a href="https://thewalrussessions.wal.app" target="_blank">event rules</a>
-</footer>
-<script src="/app.js"></script>
+<div class="footer">
+  <span>pitchmind v0.1.0</span>
+  <span class="walrus">walrus memory // decentralized prediction storage</span>
+</div>
+
+<div id="toasts"></div>
+
+<script src="/app.js?v=3"></script>
 </body>
 </html>

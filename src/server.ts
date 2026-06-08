@@ -27,7 +27,7 @@ const agent = PitchMind.fromEnv();
 
 function send(res: any, code: number, body: unknown, type = "application/json") {
   const data = type === "application/json" ? JSON.stringify(body) : (body as string);
-  res.writeHead(code, { "Content-Type": type, "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Allow-Methods": "GET,POST,OPTIONS" });
+  res.writeHead(code, { "Content-Type": type, "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Allow-Methods": "GET,POST,OPTIONS", "Cache-Control": "no-store" });
   res.end(data);
 }
 
