@@ -125,7 +125,7 @@ export default function RoastTab() {
       {/* Roasts list */}
       <div className="flex-1 overflow-y-auto custom-scroll p-3 space-y-2">
         {isLoading ? (
-          <div className="flex items-center justify-center h-32">
+          <div className="flex items-center justify-center pt-8">
             <span className="text-[10px] font-bold text-[var(--text-muted)] animate-pulse">LOADING ROASTS...</span>
           </div>
         ) : !roasts || roasts.length === 0 ? (
